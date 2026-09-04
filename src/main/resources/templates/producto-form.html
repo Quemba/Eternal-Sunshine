@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Nuevo Producto - Eternal Sunshine</title>
+
+    <link rel="stylesheet"
+          href="/css/dashboard.css">
+
+    <style>
+
+        .form-card{
+
+            background:white;
+
+            padding:30px;
+
+            border-radius:20px;
+
+            box-shadow:0 4px 12px rgba(0,0,0,.15);
+
+            max-width:700px;
+
+            margin:auto;
+        }
+
+        .form-group{
+
+            margin-bottom:20px;
+        }
+
+        .form-group label{
+
+            display:block;
+
+            margin-bottom:8px;
+
+            font-weight:bold;
+
+            color:#4a1020;
+        }
+
+        .form-group input{
+
+            width:100%;
+
+            padding:12px;
+
+            border:2px solid #c29be7;
+
+            border-radius:10px;
+        }
+
+        .btn-guardar{
+
+            background:#df6794;
+
+            color:white;
+
+            border:none;
+
+            padding:14px 24px;
+
+            border-radius:10px;
+
+            cursor:pointer;
+
+            font-weight:bold;
+        }
+
+        .btn-volver{
+
+            background:#c29be7;
+
+            color:white;
+
+            text-decoration:none;
+
+            padding:14px 24px;
+
+            border-radius:10px;
+
+            margin-left:10px;
+        }
+
+    </style>
+
+</head>
+<body>
+
+<div class="dashboard">
+
+    <div class="sidebar">
+
+        <div class="logo-container">
+
+            <img src="/images/logo.png"
+                 class="logo">
+
+            <h2>Eternal Sunshine</h2>
+
+        </div>
+
+    </div>
+
+    <div class="content">
+
+        <div class="header">
+
+            <h1>Registrar Producto</h1>
+
+        </div>
+
+        <div class="form-card">
+
+            <form action="/productos/guardar"
+                    method="post">
+
+        <input type="hidden"
+           name="id"
+           th:value="${producto.id}">
+
+                <div class="form-group">
+
+                    <label>Código</label>
+
+                    <input type="text"
+                            name="codigo"
+                            th:value="${producto.codigo}"
+                            required>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>Nombre</label>
+
+                    <input type="text"
+                             name="nombre"
+                            th:value="${producto.nombre}"
+                            required>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>Categoría</label>
+
+                    <input type="text"
+                          name="categoria"
+                            th:value="${producto.categoria}"
+                            required>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>Precio</label>
+
+                    <input type="number"
+                           step="0.01"
+                           name="precio"
+                           required>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>Cantidad</label>
+
+                    <input type="number"
+                            name="cantidad"
+                            th:value="${producto.cantidad}"
+                            required>
+
+                </div>
+
+                <button type="submit"
+                        class="btn-guardar">
+
+                    Guardar Producto
+
+                </button>
+
+                <a href="/productos"
+                   class="btn-volver">
+
+                    Volver
+
+                </a>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

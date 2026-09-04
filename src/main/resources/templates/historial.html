@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Historial - Eternal Sunshine</title>
+
+    <link rel="stylesheet"
+          href="/css/dashboard.css">
+</head>
+<body>
+
+<div class="dashboard">
+
+    <div class="sidebar">
+
+        <div class="logo-container">
+
+            <img src="/images/logo.png"
+                 class="logo">
+
+            <h2>Eternal Sunshine</h2>
+
+        </div>
+
+        <div class="menu">
+
+            <a href="/">Dashboard</a>
+
+            <a href="/productos">Productos</a>
+
+            <a href="/usuarios">Usuarios</a>
+
+            <a href="/historial">Historial</a>
+
+            <a href="/login">Cerrar Sesión</a>
+
+        </div>
+
+    </div>
+
+    <div class="content">
+
+        <div class="header">
+
+            <h1>Historial de Movimientos</h1>
+
+        </div>
+
+        <div class="tabla">
+
+            <h3>Acciones Registradas</h3>
+
+            <table style="width:100%; border-collapse: collapse;">
+
+                <thead>
+
+                <tr style="background:#df6794; color:white;">
+
+                    <th style="padding:10px;">ID</th>
+
+                    <th style="padding:10px;">Usuario</th>
+
+                    <th style="padding:10px;">Acción</th>
+
+                    <th style="padding:10px;">Fecha</th>
+
+                </tr>
+
+                </thead>
+
+                <tbody>
+
+                <tr th:each="h : ${historial}">
+
+                    <td style="padding:10px;"
+                        th:text="${h.id}">
+                    </td>
+
+                    <td style="padding:10px;"
+                        th:text="${h.usuario}">
+                    </td>
+
+                    <td style="padding:10px;"
+                        th:text="${h.accion}">
+                    </td>
+
+                    <td style="padding:10px;"
+                      th:text="${#temporals.format(h.fecha, 'dd/MM/yyyy HH:mm')}">
+                    </td>
+
+                </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

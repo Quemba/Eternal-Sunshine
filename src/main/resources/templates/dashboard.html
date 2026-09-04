@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+
+    <title>Dashboard - Eternal Sunshine</title>
+
+    <link rel="stylesheet"
+          href="/css/dashboard.css">
+</head>
+<body>
+
+<div class="dashboard">
+
+    <div class="sidebar">
+
+        <div class="logo-container">
+
+            <img src="/images/logo.png"
+                 class="logo">
+
+            <h2>Eternal Sunshine</h2>
+
+        </div>
+
+        <div class="menu">
+
+            <a href="/">Dashboard</a>
+
+            <a href="/productos">Productos</a>
+
+            <a href="/usuarios">Usuarios</a>
+
+            <a href="/historial">Historial</a>
+
+            <a href="/login">Cerrar Sesión</a>
+
+        </div>
+
+    </div>
+
+    <div class="content">
+
+        <div class="header">
+
+            <h1>
+                Bienvenido,
+                <span th:text="${usuario}"></span>
+            </h1>
+
+        </div>
+
+        <div class="cards">
+
+            <div class="card card-total">
+
+                Total Inventario
+
+                <h2 th:text="${'$ ' + #numbers.formatDecimal(valorInventario, 0, 'POINT', 0, 'COMMA')}"></h2>
+
+            </div>
+
+            <div class="card card-productos">
+
+                Productos
+
+                <h2 th:text="${totalProductos}"></h2>
+
+            </div>
+
+            <div class="card card-stock">
+
+                Stock Bajo
+
+                <h2 th:text="${stockBajo}"></h2>
+
+            </div>
+
+            <div class="card card-agotados">
+
+                Agotados
+
+                <h2 th:text="${agotados}"></h2>
+
+            </div>
+
+        </div>
+
+        <div class="tabla">
+
+            <h3>Productos</h3>
+
+            <p>
+                Aquí aparecerá la tabla real de productos
+                cuando migremos RegistroFrame.
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>
