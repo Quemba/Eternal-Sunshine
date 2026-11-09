@@ -1,0 +1,157 @@
+.filtros {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: flex-end;
+    margin-bottom: 20px;
+}
+
+.filtro {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 150px;
+}
+
+.filtro-texto {
+    flex: 1;
+    min-width: 240px;
+}
+
+.filtro label {
+    font-size: 13px;
+    font-weight: bold;
+    color: #4a1020;
+}
+
+.filtro select,
+.filtro input[type="date"],
+.filtro input[type="text"] {
+    padding: 10px 12px;
+    border: 2px solid #c29be7;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 14px;
+    background: #ffffff;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.entrada-icono {
+    position: relative;
+}
+
+.entrada-icono i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: #df6794;
+}
+
+.entrada-icono input {
+    padding-left: 38px !important;
+}
+
+.filtro-botones {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.btn-limpiar {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #9b6bb8;
+    font-weight: bold;
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.btn-limpiar:hover {
+    text-decoration: underline;
+}
+
+.btn-limpiar[hidden] {
+    display: none;
+}
+
+.resumen {
+    color: #4a1020;
+    margin: 0 0 14px;
+}
+
+.vacio {
+    text-align: center;
+    color: #888;
+    padding: 30px;
+}
+
+.vacio a {
+    color: #df6794;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.paginacion {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    align-items: center;
+    margin-top: 22px;
+}
+
+.paginacion a,
+.paginacion span {
+    min-width: 38px;
+    height: 38px;
+    padding: 0 10px;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.pag-link {
+    background: #f3e8d3;
+    color: #4a1020;
+}
+
+.pag-link:hover {
+    background: #e9d9ba;
+}
+
+.pag-actual {
+    background: #df6794;
+    color: #ffffff;
+}
+
+.pag-puntos {
+    color: #9b6b78;
+}
+
+.pag-nav {
+    background: #c29be7;
+    color: #ffffff;
+}
+
+.pag-nav i {
+    font-size: 18px;
+}
+
+.zona-viva {
+    transition: opacity .15s;
+}
+
+.zona-viva.cargando {
+    opacity: .55;
+}

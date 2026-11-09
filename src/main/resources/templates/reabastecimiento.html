@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reabastecimiento - Eternal Sunshine</title>
+
+    <link rel="stylesheet" href="/css/dashboard.css">
+
+    <style>
+        .nota { color:#4a1020; margin:0 0 16px; line-height:1.5; }
+        .chips { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
+        .chip { padding:8px 16px; border-radius:20px; font-weight:bold; }
+        .chip-urgente { background:#fdd; color:#900; }
+        .chip-pronto { background:#fff3cd; color:#8a6d00; }
+        .badge { padding:4px 12px; border-radius:12px; font-weight:bold; font-size:13px; }
+        .badge-urgente { background:#fdd; color:#900; }
+        .badge-pronto { background:#fff3cd; color:#8a6d00; }
+        .vacio { text-align:center; color:#888; padding:24px; }
+        .acciones-fila { white-space:nowrap; }
+        .acciones-fila a { text-decoration:none; }
+        .acciones-fila i { font-size:22px; vertical-align:middle; }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+
+    <div class="sidebar">
+
+        <div class="logo-container">
+            <img src="/images/logo.png" class="logo">
+            <h2>Eternal Sunshine</h2>
+        </div>
+
+        <div th:replace="~{fragments/menu :: menu}"></div>
+
+    </div>
+
+    <div class="content">
+
+        <div class="header">
+            <h1>Reabastecimiento</h1>
+        </div>
+
+        <div class="tabla">
+
+            <div style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;">
+                <a href="/" class="action-btn btn-export">
+                    <i class="ti ti-arrow-left" aria-hidden="true"></i> Volver al Dashboard
+                </a>
+                <a href="/entradas/nueva" class="action-btn btn-add">
+                    <i class="ti ti-package-import" aria-hidden="true"></i> Recibir mercancía
+                </a>
+            </div>
+
+            <p class="nota">
+                Sugerencias calculadas con las ventas de los últimos
+                <strong th:text="${ventanaDias}"></strong> días.
+                Aparecen los productos a los que les alcanza el stock para
+                <strong th:text="${alertaDias}"></strong> días o menos, y la cantidad sugerida
+                cubre <strong th:text="${coberturaDias}"></strong> días de ventas.
+            </p>
+
+            <div class="chips">
+                <span class="chip chip-urgente"><span th:text="${urgentes}"></span> urgentes</span>
+                <span class="chip chip-pronto"><span th:text="${pronto}"></span> para pronto</span>
+            </div>
+
+            <p th:if="${#lists.isEmpty(sugerencias)}" class="vacio">
+                No hay productos para reabastecer por ahora. Si aún no hay ventas registradas
+                en los últimos días, no se pueden calcular sugerencias.
+            </p>
+
+            <table th:unless="${#lists.isEmpty(sugerencias)}" style="width:100%; border-collapse: collapse;">
+
+                <thead>
+
+                <tr style="background:#df6794; color:white;">
+
+                    <th style="padding:10px;">Prioridad</th>
+
+                    <th style="padding:10px;">Código</th>
+
+                    <th style="padding:10px;">Producto</th>
+
+                    <th style="padding:10px;">Stock</th>
+
+                    <th style="padding:10px;">Vendidas</th>
+
+                    <th style="padding:10px;">Promedio/día</th>
+
+                    <th style="padding:10px;">Días de stock</th>
+
+                    <th style="padding:10px;">Sugerido comprar</th>
+
+                    <th style="padding:10px;">Acciones</th>
+
+                </tr>
+
+                </thead>
+
+                <tbody>
+
+                <tr th:each="s : ${sugerencias}">
+
+                    <td style="padding:10px;">
+                        <span th:if="${s.urgente}" class="badge badge-urgente">Urgente</span>
+                        <span th:unless="${s.urgente}" class="badge badge-pronto">Pronto</span>
+                    </td>
+
+                    <td style="padding:10px;" th:text="${s.producto.codigo}"></td>
+
+                    <td style="padding:10px;" th:text="${s.producto.nombre}"></td>
+
+                    <td style="padding:10px;" th:text="${s.producto.cantidad}"></td>
+
+                    <td style="padding:10px;" th:text="${s.vendidas}"></td>
+
+                    <td style="padding:10px;"
+                        th:text="${#numbers.formatDecimal(s.promedioDiario, 1, 'POINT', 1, 'COMMA')}"></td>
+
+                    <td style="padding:10px;"
+                        th:text="${#numbers.formatDecimal(s.diasRestantes, 1, 'POINT', 1, 'COMMA')}"></td>
+
+                    <td style="padding:10px;"><strong th:text="${s.sugerido}"></strong></td>
+
+                    <td style="padding:10px;" class="acciones-fila">
+
+                        <a th:href="@{/entradas/nueva(producto=${s.producto.id},cantidad=${s.sugerido})}"
+                           title="Recibir mercancía de este producto"
+                           style="color:#df6794;">
+                            <i class="ti ti-package-import" aria-hidden="true"></i>
+                        </a>
+
+                        &nbsp;&nbsp;
+
+                        <a th:href="@{/productos/editar/{id}(id=${s.producto.id})}"
+                           title="Editar producto"
+                           style="color:#9b6bb8;">
+                            <i class="ti ti-pencil" aria-hidden="true"></i>
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

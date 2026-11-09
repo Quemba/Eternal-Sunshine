@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Nueva Venta - Eternal Sunshine</title>
+
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="/css/escaner.css">
+    <link rel="stylesheet" href="/css/confirmar.css">
+
+    <style>
+        .venta-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:start; }
+        @media (max-width:900px) { .venta-grid { grid-template-columns:1fr; } }
+
+        .panel { background:white; padding:20px; border-radius:20px; box-shadow:0 4px 12px rgba(0,0,0,.15); }
+        .panel h3 { margin-top:0; color:#df6794; }
+
+        .buscador-fila { display:flex; gap:10px; }
+        #buscador { flex:1; min-width:0; padding:14px; border:2px solid #c29be7; border-radius:10px; font-size:16px; box-sizing:border-box; }
+        #btn-escanear { white-space:nowrap; }
+
+        .resultado-item { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid #eee; flex-wrap:wrap; }
+        .resultado-item small { display:block; color:#777; }
+        .resultado-item .acciones { display:flex; gap:8px; align-items:center; }
+        .resultado-item input { width:64px; padding:8px; border:2px solid #c29be7; border-radius:8px; }
+        .sin-resultados { color:#888; text-align:center; padding:14px; }
+
+        .vbtn { background:#df6794; color:white; border:none; padding:9px 14px; border-radius:8px; cursor:pointer; font-weight:bold; font-family:inherit; font-size:14px; }
+        .vbtn:disabled { background:#ccc; cursor:not-allowed; }
+        .vbtn-sec { background:#c29be7; }
+        .vbtn-chico { padding:6px 9px; }
+        .vbtn i { font-size:1.15em; vertical-align:-2px; }
+
+        .carrito-tabla { width:100%; border-collapse:collapse; }
+        .carrito-tabla th { background:#df6794; color:white; padding:10px; text-align:left; }
+        .carrito-tabla td { padding:10px; border-bottom:1px solid #eee; vertical-align:middle; }
+        .carrito-tabla small { display:block; color:#777; }
+        .carrito-tabla .vacio { text-align:center; color:#888; padding:24px; }
+        .cantidad-ctrl { display:flex; align-items:center; gap:8px; }
+
+        .carrito-pie { display:flex; justify-content:space-between; align-items:center; margin-top:12px; gap:10px; flex-wrap:wrap; }
+        #total-venta { font-size:28px; font-weight:bold; color:#4a1020; }
+        #btn-finalizar { width:100%; padding:16px; font-size:17px; border-radius:12px; margin-top:12px; }
+
+        #aviso { display:none; position:fixed; top:20px; left:50%; transform:translateX(-50%); padding:12px 22px; border-radius:12px; font-weight:bold; box-shadow:0 4px 14px rgba(0,0,0,.25); z-index:1000; max-width:90%; text-align:center; }
+        .aviso-error { background:#fdd; color:#900; }
+        .aviso-ok { background:#dfd; color:#060; }
+    </style>
+</head>
+<body>
+
+<div id="aviso" role="status" aria-live="polite"></div>
+
+<div class="dashboard">
+
+    <div class="sidebar">
+
+        <div class="logo-container">
+            <img src="/images/logo.png" class="logo">
+            <h2>Eternal Sunshine</h2>
+        </div>
+
+        <div th:replace="~{fragments/menu :: menu}"></div>
+
+    </div>
+
+    <div class="content">
+
+        <div class="header">
+            <h1>Nueva Venta</h1>
+        </div>
+
+        <div class="venta-grid">
+
+            <div class="panel">
+                <h3>Buscar producto</h3>
+
+                <div class="buscador-fila">
+                    <input type="text" id="buscador" placeholder="Escribe el código o el nombre..." autocomplete="off" autofocus>
+                    <button type="button" class="vbtn" id="btn-escanear"><i class="ti ti-scan" aria-hidden="true"></i> Escanear</button>
+                </div>
+
+                <div id="escaner-montaje" style="display:none;"></div>
+
+                <div id="resultados" style="margin-top:10px;"></div>
+            </div>
+
+            <div class="panel">
+                <h3>Carrito</h3>
+
+                <table class="carrito-tabla">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Subtotal</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="carrito-body"></tbody>
+                </table>
+
+                <div class="carrito-pie">
+                    <button type="button" class="vbtn vbtn-sec" id="btn-vaciar">Vaciar carrito</button>
+                    <div>
+                        <small id="unidades-venta" style="color:#777; display:block; text-align:right;">0 unidades</small>
+                        <div id="total-venta">$0</div>
+                    </div>
+                </div>
+
+                <button type="button" class="vbtn" id="btn-finalizar" disabled><i class="ti ti-receipt" aria-hidden="true"></i> Finalizar venta</button>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="/js/quagga.min.js"></script>
+<script src="/js/escaner.js"></script>
+<script src="/js/confirmar.js"></script>
+
+<script th:inline="javascript">
+    const productos = /*[[${productos}]]*/ [];
+    let carrito = [];
+
+    const buscador = document.getElementById('buscador');
+    const resultados = document.getElementById('resultados');
+    const btnEscanear = document.getElementById('btn-escanear');
+    const btnFinalizar = document.getElementById('btn-finalizar');
+
+    function fmt(n) {
+        return '$' + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+
+    let avisoTimer;
+    function aviso(texto, tipo) {
+        const a = document.getElementById('aviso');
+        a.textContent = texto;
+        a.className = (tipo === 'ok') ? 'aviso-ok' : 'aviso-error';
+        a.style.display = 'block';
+        clearTimeout(avisoTimer);
+        avisoTimer = setTimeout(function () { a.style.display = 'none'; }, 4000);
+
+        if (tipo !== 'ok' && typeof EscanerCodigo !== 'undefined') {
+            EscanerCodigo.pitidoError();
+        }
+    }
+
+    function enCarrito(productoId) {
+        const item = carrito.find(function (i) { return i.productoId === productoId; });
+        return item ? item.cantidad : 0;
+    }
+
+    function crear(tag, texto, clase) {
+        const e = document.createElement(tag);
+        if (texto !== undefined && texto !== null) e.textContent = texto;
+        if (clase) e.className = clase;
+        return e;
+    }
+
+    function icono(clase) {
+        const i = document.createElement('i');
+        i.className = 'ti ' + clase;
+        i.setAttribute('aria-hidden', 'true');
+        return i;
+    }
+
+    function ponerBoton(boton, clase, texto) {
+        boton.textContent = '';
+        if (clase) boton.appendChild(icono(clase));
+        boton.appendChild(document.createTextNode(' ' + texto));
+    }
+
+    function filtrar() {
+        const texto = buscador.value.trim().toLowerCase();
+        resultados.innerHTML = '';
+        if (texto === '') return;
+
+        const encontrados = productos.filter(function (p) {
+            return p.nombre.toLowerCase().includes(texto) || p.codigo.toLowerCase().includes(texto);
+        }).slice(0, 8);
+
+        if (encontrados.length === 0) {
+            resultados.appendChild(crear('div', 'No se encontraron productos.', 'sin-resultados'));
+            return;
+        }
+
+        encontrados.forEach(function (p) {
+            const disponible = p.cantidad - enCarrito(p.id);
+
+            const fila = crear('div', null, 'resultado-item');
+
+            const info = crear('div');
+            info.appendChild(crear('strong', p.nombre));
+            info.appendChild(crear('small', p.codigo + ' · ' + fmt(p.precio) + ' · Disponible: ' + disponible));
+            fila.appendChild(info);
+
+            const acciones = crear('div', null, 'acciones');
+
+            if (disponible <= 0) {
+                acciones.appendChild(crear('span', 'Agotado', null));
+            } else {
+                const cant = document.createElement('input');
+                cant.type = 'number';
+                cant.min = '1';
+                cant.max = String(disponible);
+                cant.value = '1';
+
+                const boton = crear('button', null, 'vbtn');
+                boton.type = 'button';
+                ponerBoton(boton, 'ti-plus', 'Agregar');
+                boton.addEventListener('click', function () {
+                    agregar(p, parseInt(cant.value, 10));
+                });
+
+                acciones.appendChild(cant);
+                acciones.appendChild(boton);
+            }
+
+            fila.appendChild(acciones);
+            resultados.appendChild(fila);
+        });
+    }
+
+    function agregar(p, cantidad, sinFoco) {
+        if (!Number.isInteger(cantidad) || cantidad <= 0) {
+            aviso('Ingresa una cantidad válida.', 'error');
+            return false;
+        }
+
+        const yaEnCarrito = enCarrito(p.id);
+
+        if (yaEnCarrito + cantidad > p.cantidad) {
+            aviso('No hay suficiente stock de ' + p.nombre + ' (disponible: ' + (p.cantidad - yaEnCarrito) + ').', 'error');
+            return false;
+        }
+
+        const existente = carrito.find(function (i) { return i.productoId === p.id; });
+        if (existente) {
+            existente.cantidad += cantidad;
+        } else {
+            carrito.push({ productoId: p.id, nombre: p.nombre, codigo: p.codigo, precio: p.precio, stock: p.cantidad, cantidad: cantidad });
+        }
+
+        buscador.value = '';
+        resultados.innerHTML = '';
+        if (!sinFoco) {
+            buscador.focus();
+        }
+        render();
+        return true;
+    }
+
+    function cambiarCantidad(productoId, delta) {
+        const item = carrito.find(function (i) { return i.productoId === productoId; });
+        if (!item) return;
+
+        const nueva = item.cantidad + delta;
+
+        if (nueva <= 0) {
+            quitar(productoId);
+            return;
+        }
+
+        if (nueva > item.stock) {
+            aviso('No hay más stock de ' + item.nombre + ' (disponible: ' + item.stock + ').', 'error');
+            return;
+        }
+
+        item.cantidad = nueva;
+        render();
+    }
+
+    function quitar(productoId) {
+        carrito = carrito.filter(function (i) { return i.productoId !== productoId; });
+        render();
+    }
+
+    function render() {
+        const tbody = document.getElementById('carrito-body');
+        tbody.innerHTML = '';
+
+        let total = 0;
+        let unidades = 0;
+
+        if (carrito.length === 0) {
+            const tr = document.createElement('tr');
+            const td = crear('td', 'El carrito está vacío. Busca un producto para empezar.', 'vacio');
+            td.colSpan = 4;
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+        }
+
+        carrito.forEach(function (item) {
+            const subtotal = item.precio * item.cantidad;
+            total += subtotal;
+            unidades += item.cantidad;
+
+            const tr = document.createElement('tr');
+
+            const tdNombre = document.createElement('td');
+            tdNombre.appendChild(crear('strong', item.nombre));
+            tdNombre.appendChild(crear('small', item.codigo + ' · ' + fmt(item.precio)));
+            tr.appendChild(tdNombre);
+
+            const tdCant = document.createElement('td');
+            const ctrl = crear('div', null, 'cantidad-ctrl');
+
+            const menos = crear('button', null, 'vbtn vbtn-chico');
+            menos.type = 'button';
+            menos.setAttribute('aria-label', 'Restar una unidad');
+            menos.appendChild(icono('ti-minus'));
+            menos.addEventListener('click', function () { cambiarCantidad(item.productoId, -1); });
+
+            const mas = crear('button', null, 'vbtn vbtn-chico');
+            mas.type = 'button';
+            mas.setAttribute('aria-label', 'Sumar una unidad');
+            mas.appendChild(icono('ti-plus'));
+            mas.addEventListener('click', function () { cambiarCantidad(item.productoId, 1); });
+
+            ctrl.appendChild(menos);
+            ctrl.appendChild(crear('strong', String(item.cantidad)));
+            ctrl.appendChild(mas);
+            tdCant.appendChild(ctrl);
+            tr.appendChild(tdCant);
+
+            tr.appendChild(crear('td', fmt(subtotal)));
+
+            const tdQuitar = document.createElement('td');
+            const quitarBtn = crear('button', null, 'vbtn vbtn-sec vbtn-chico');
+            quitarBtn.type = 'button';
+            quitarBtn.setAttribute('aria-label', 'Quitar ' + item.nombre + ' del carrito');
+            quitarBtn.title = 'Quitar del carrito';
+            quitarBtn.appendChild(icono('ti-x'));
+            quitarBtn.addEventListener('click', function () { quitar(item.productoId); });
+            tdQuitar.appendChild(quitarBtn);
+            tr.appendChild(tdQuitar);
+
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById('total-venta').textContent = fmt(total);
+        document.getElementById('unidades-venta').textContent = unidades + (unidades === 1 ? ' unidad' : ' unidades');
+        btnFinalizar.disabled = carrito.length === 0;
+    }
+
+    buscador.addEventListener('input', filtrar);
+
+    buscador.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+
+        const texto = buscador.value.trim().toLowerCase();
+        if (texto === '') return;
+
+        let p = productos.find(function (x) { return x.codigo.toLowerCase() === texto; });
+        const porCodigo = !!p;
+
+        if (!p) {
+            p = productos.find(function (x) {
+                return x.nombre.toLowerCase().includes(texto) || x.codigo.toLowerCase().includes(texto);
+            });
+        }
+
+        if (!p) {
+            aviso('No se encontró ningún producto.', 'error');
+            return;
+        }
+
+        if (agregar(p, 1) && porCodigo) {
+            EscanerCodigo.pitido();
+        }
+    });
+
+    let vaciarListo = false;
+    let vaciarTimer;
+    const btnVaciar = document.getElementById('btn-vaciar');
+
+    btnVaciar.addEventListener('click', function () {
+        if (carrito.length === 0) return;
+
+        if (!vaciarListo) {
+            vaciarListo = true;
+            btnVaciar.textContent = '¿Confirmar?';
+            vaciarTimer = setTimeout(function () {
+                vaciarListo = false;
+                btnVaciar.textContent = 'Vaciar carrito';
+            }, 3000);
+            return;
+        }
+
+        clearTimeout(vaciarTimer);
+        vaciarListo = false;
+        btnVaciar.textContent = 'Vaciar carrito';
+        carrito = [];
+        render();
+        aviso('Carrito vacío.', 'ok');
+    });
+
+    btnFinalizar.addEventListener('click', async function () {
+        if (carrito.length === 0) return;
+
+        btnFinalizar.disabled = true;
+        ponerBoton(btnFinalizar, 'ti-loader-2', 'Registrando...');
+
+        try {
+            const respuesta = await fetch('/ventas/registrar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(carrito.map(function (i) {
+                    return { productoId: i.productoId, cantidad: i.cantidad };
+                }))
+            });
+
+            const datos = await respuesta.json();
+
+            if (respuesta.ok && datos.ok) {
+                window.location.href = '/ventas/' + datos.id + '?ok=1';
+                return;
+            }
+
+            aviso(datos.mensaje || 'No se pudo registrar la venta.', 'error');
+
+        } catch (e) {
+            aviso('No se pudo registrar la venta. Revisa tu conexión o vuelve a iniciar sesión.', 'error');
+        }
+
+        btnFinalizar.disabled = carrito.length === 0;
+        ponerBoton(btnFinalizar, 'ti-receipt', 'Finalizar venta');
+    });
+
+    function normalizar(codigo) {
+        const t = String(codigo).trim();
+        return /^\d+$/.test(t) ? t.replace(/^0+/, '') : t.toLowerCase();
+    }
+
+    function buscarParecido(codigo) {
+        const leido = String(codigo).trim();
+
+        if (!/^\d{13}$/.test(leido)) return null;
+
+        const cola = leido.slice(-6);
+
+        const candidatos = productos.filter(function (p) {
+            const c = String(p.codigo).trim();
+            return /^\d{13}$/.test(c) && c.slice(-6) === cola;
+        });
+
+        return candidatos.length === 1 ? candidatos[0] : null;
+    }
+
+    function preguntarParecido(leido, producto) {
+        escaner.pausar();
+        EscanerCodigo.pitidoAviso();
+
+        Confirmar.preguntar({
+            icono: 'ti-search',
+            titulo: '¿Quisiste decir este producto?',
+            mensaje: 'Leí ' + leido + ', que no está registrado, pero termina igual que «' + producto.nombre + '» (' + producto.codigo + ').',
+            textoConfirmar: 'Sí, agregar',
+            textoCancelar: 'No',
+            enfocarAceptar: true
+        }, function () {
+            escaner.reanudar();
+
+            if (agregar(producto, 1, true)) {
+                EscanerCodigo.pitido();
+                aviso('Agregado: ' + producto.nombre, 'ok');
+                escaner.marcar('ok');
+            } else {
+                escaner.marcar('error');
+            }
+        }, function () {
+            escaner.reanudar();
+            aviso('Código no encontrado: ' + leido, 'error');
+            escaner.marcar('error');
+        });
+    }
+
+    function procesarCodigo(codigo) {
+        try {
+            const buscado = normalizar(codigo);
+            const p = productos.find(function (x) { return normalizar(x.codigo) === buscado; });
+
+            if (p) {
+                if (agregar(p, 1, true)) {
+                    EscanerCodigo.pitido();
+                    aviso('Agregado: ' + p.nombre, 'ok');
+                    return true;
+                }
+
+                return false;
+            }
+
+            const parecido = buscarParecido(codigo);
+
+            if (parecido) {
+                preguntarParecido(codigo, parecido);
+                return 'pendiente';
+            }
+
+            aviso('Código no encontrado: ' + codigo, 'error');
+            return false;
+
+        } catch (e) {
+            aviso('No se pudo procesar el código leído.', 'error');
+            return false;
+        }
+    }
+
+    const escaner = EscanerCodigo.crear({
+        montaje: document.getElementById('escaner-montaje'),
+        alIniciar: function () {
+            btnEscanear.disabled = true;
+            ponerBoton(btnEscanear, 'ti-camera', 'Abriendo cámara...');
+        },
+        alActivar: function () {
+            ponerBoton(btnEscanear, 'ti-camera', 'Cámara activa');
+        },
+        alCerrar: function () {
+            btnEscanear.disabled = false;
+            ponerBoton(btnEscanear, 'ti-scan', 'Escanear');
+        },
+        alError: function (mensaje) {
+            aviso(mensaje, 'error');
+        },
+        alLeer: function (codigo) {
+            return procesarCodigo(codigo);
+        }
+    });
+
+    btnEscanear.addEventListener('click', function () { escaner.abrir(); });
+    window.addEventListener('pagehide', function () { escaner.cerrar(); });
+
+    render();
+    buscador.focus();
+</script>
+
+</body>
+</html>

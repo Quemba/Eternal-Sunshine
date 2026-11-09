@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Conteo - Eternal Sunshine</title>
+
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="/css/confirmar.css">
+    <link rel="stylesheet" href="/css/alertas.css">
+
+    <style>
+        .meta { display:flex; flex-wrap:wrap; gap:8px 22px; align-items:center; margin-bottom:16px; color:#4a1020; font-size:14px; }
+        .meta span small { color:#8a6a73; }
+        .volver { display:inline-flex; align-items:center; gap:6px; margin-bottom:14px; color:#df6794; font-weight:800; text-decoration:none; }
+        .volver:hover { text-decoration:underline; }
+
+        .resumen-conteo { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:20px; }
+        .dato { padding:14px; border-radius:16px; background:#fdf6f8; text-align:center; }
+        .dato span { display:block; color:#8a6a73; font-size:13px; margin-bottom:4px; }
+        .dato strong { font-size:22px; color:#4a1020; }
+        .dato.mal strong { color:#b83255; }
+        .dato.bien strong { color:#2e9d57; }
+
+        .aviso-info { display:flex; gap:10px; align-items:flex-start; margin-bottom:18px; padding:14px 16px; border-radius:14px; background:#f3e8ff; color:#5b3a86; font-size:14px; line-height:1.45; }
+        .aviso-info i { font-size:22px; }
+        .aviso-info.gris { background:#eeeeee; color:#666666; }
+
+        .dif-menos { color:#b83255; font-weight:800; }
+        .dif-mas { color:#1f6b3a; font-weight:800; }
+        .dif-cero { color:#8a6a73; }
+        .nota-fila { font-size:13px; color:#6b5400; }
+        .nota-fila i { vertical-align:-2px; }
+        .ok-fila { font-size:13px; color:#1f6b3a; font-weight:700; }
+        .gris-fila { font-size:13px; color:#8a6a73; }
+        tr.fila-conflicto td { background:#fff8e1 !important; }
+
+        .acciones-revision { display:flex; flex-wrap:wrap; gap:12px; margin-top:18px; align-items:center; }
+        .acciones-revision form { margin:0; }
+        .acciones-revision button { border:none; font-family:inherit; cursor:pointer; }
+        .btn-aplicar { background:#2e9d57; color:#fff; padding:12px 20px; border-radius:10px; font-weight:800; font-size:15px; }
+        .btn-aplicar:disabled { background:#ccc; cursor:not-allowed; }
+        .btn-cerrar-sin { background:#c29be7; color:#fff; padding:12px 20px; border-radius:10px; font-weight:800; font-size:15px; }
+        .btn-cancelar-conteo { background:#b83255; color:#fff; padding:12px 20px; border-radius:10px; font-weight:800; font-size:15px; }
+        .acciones-revision i { font-size:19px; vertical-align:-3px; margin-right:4px; }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+
+    <div class="sidebar">
+
+        <div class="logo-container">
+            <img src="/images/logo.png" class="logo">
+            <h2>Eternal Sunshine</h2>
+        </div>
+
+        <div th:replace="~{fragments/menu :: menu}"></div>
+
+    </div>
+
+    <div class="content">
+
+        <div class="header">
+            <h1>
+                <span th:if="${conteo.numero != null}" th:text="'Conteo ' + ${conteo.numero}"></span>
+                <span th:if="${conteo.numero == null and conteo.estado.name() == 'CANCELADO'}">Conteo cancelado</span>
+                <span th:if="${conteo.numero == null and conteo.estado.name() != 'CANCELADO'}">Conteo en curso</span>
+                <span th:if="${conteo.nombre != null}" th:text="'· ' + ${conteo.nombre}"></span>
+            </h1>
+        </div>
+
+        <div class="tabla"
+             th:with="mostrarSistema=${esAdmin or conteo.estado.name() == 'REVISADO'}, revisable=${esAdmin and conteo.estado.name() == 'PENDIENTE_REVISION'}">
+
+            <div th:replace="~{fragments/alertas :: alertas}"></div>
+
+            <a href="/conteos" class="volver"><i class="ti ti-arrow-left" aria-hidden="true"></i> Volver a la lista</a>
+
+            <div class="meta">
+                <span class="ec-badge" th:classappend="${conteo.estadoClase}" th:text="${conteo.estadoTexto}"></span>
+                <span><small>Contado por</small> <strong th:text="${conteo.usuario != null} ? ${conteo.usuario.username} : '-'"></strong></span>
+                <span><small>Inició</small> <strong th:text="${#temporals.format(conteo.fechaInicio, 'dd/MM/yyyy HH:mm')}"></strong></span>
+                <span th:if="${conteo.fechaEnvio != null}"><small>Enviado</small> <strong th:text="${#temporals.format(conteo.fechaEnvio, 'dd/MM/yyyy HH:mm')}"></strong></span>
+                <span th:if="${conteo.fechaRevision != null}"><small>Revisado</small>
+                    <strong th:text="${#temporals.format(conteo.fechaRevision, 'dd/MM/yyyy HH:mm')} + (${conteo.usuarioRevisor != null} ? ' por ' + ${conteo.usuarioRevisor.username} : '')"></strong></span>
+                <span th:if="${conteo.fechaCancelacion != null}"><small>Canceló</small>
+                    <strong th:text="${#temporals.format(conteo.fechaCancelacion, 'dd/MM/yyyy HH:mm')} + (${conteo.usuarioCancela != null} ? ' por ' + ${conteo.usuarioCancela.username} : '')"></strong></span>
+            </div>
+
+            <div class="aviso-info gris" th:if="${conteo.estado.name() == 'CANCELADO'}">
+                <i class="ti ti-ban" aria-hidden="true"></i>
+                <span>Este conteo fue cancelado antes de terminarse. Quedó registrado en la lista, sin número oficial, y el inventario no se modificó.</span>
+            </div>
+
+            <div class="aviso-info" th:if="${conteo.estado.name() == 'EN_CURSO'}">
+                <i class="ti ti-info-circle" aria-hidden="true"></i>
+                <span>Este conteo sigue en curso: lo está haciendo
+                    <strong th:text="${conteo.usuario != null} ? ${conteo.usuario.username} : 'otra persona'"></strong>.
+                    Puedes ver lo que lleva, pero no modificarlo.</span>
+            </div>
+
+            <div class="aviso-info" th:if="${conteo.estado.name() == 'PENDIENTE_REVISION' and !esAdmin}">
+                <i class="ti ti-hourglass" aria-hidden="true"></i>
+                <span>Tu conteo ya fue enviado. Está esperando que el administrador revise las diferencias.</span>
+            </div>
+
+            <div class="resumen-conteo" th:if="${mostrarSistema and conteo.estado.name() != 'CANCELADO'}">
+
+                <div class="dato"><span>Productos contados</span><strong th:text="${detalle.resumen.productos}"></strong></div>
+
+                <div class="dato"><span>Unidades contadas</span><strong th:text="${detalle.resumen.unidadesContadas}"></strong></div>
+
+                <div class="dato bien"><span>Coinciden</span><strong th:text="${detalle.resumen.coinciden}"></strong></div>
+
+                <div class="dato" th:classappend="${detalle.resumen.conDiferencia > 0} ? 'mal'"><span>Con diferencia</span><strong th:text="${detalle.resumen.conDiferencia}"></strong></div>
+
+                <div class="dato"><span>Unidades faltantes</span><strong th:text="${detalle.resumen.unidadesFaltantes}"></strong></div>
+
+                <div class="dato"><span>Unidades sobrantes</span><strong th:text="${detalle.resumen.unidadesSobrantes}"></strong></div>
+
+                <div class="dato mal" th:if="${esAdmin}"><span>Valor faltante</span><strong th:text="'$ ' + ${#numbers.formatInteger(detalle.resumen.valorFaltante, 1, 'POINT')}"></strong></div>
+
+                <div class="dato bien" th:if="${esAdmin}"><span>Valor sobrante</span><strong th:text="'$ ' + ${#numbers.formatInteger(detalle.resumen.valorSobrante, 1, 'POINT')}"></strong></div>
+
+            </div>
+
+            <p th:if="${#lists.isEmpty(detalle.filas) and conteo.estado.name() != 'CANCELADO'}" class="vacio"
+               style="text-align:center; color:#888; padding:24px;">
+                Este conteo no tiene productos.
+            </p>
+
+            <table th:unless="${#lists.isEmpty(detalle.filas)}" style="width:100%; border-collapse: collapse;">
+
+                <thead>
+
+                <tr style="background:#df6794; color:white;">
+
+                    <th style="padding:10px; width:44px;" th:if="${revisable}">
+                        <input type="checkbox" id="marcar-todas" title="Marcar o desmarcar todas" checked>
+                    </th>
+
+                    <th style="padding:10px; text-align:left;">Producto</th>
+
+                    <th style="padding:10px;" th:if="${mostrarSistema}">Sistema decía</th>
+
+                    <th style="padding:10px;">Contado</th>
+
+                    <th style="padding:10px;" th:if="${mostrarSistema}">Diferencia</th>
+
+                    <th style="padding:10px;" th:if="${esAdmin and mostrarSistema}">Valor</th>
+
+                    <th style="padding:10px; text-align:left;" th:if="${mostrarSistema}">Estado</th>
+
+                </tr>
+
+                </thead>
+
+                <tbody>
+
+                <tr th:each="f : ${detalle.filas}" th:classappend="${f.conflicto} ? 'fila-conflicto'">
+
+                    <td style="padding:10px; text-align:center;" th:if="${revisable}">
+                        <input type="checkbox"
+                               name="lineas"
+                               form="form-aplicar"
+                               th:value="${f.id}"
+                               th:checked="${f.diferencia != 0 and !f.conflicto}"
+                               th:disabled="${f.diferencia == 0}"
+                               class="casilla-linea"
+                               th:attr="aria-label='Aplicar ajuste de ' + ${f.nombre}">
+                    </td>
+
+                    <td style="padding:10px;">
+                        <strong th:text="${f.nombre}"></strong>
+                        <span style="display:block; color:#777; font-size:12px;" th:text="${f.codigo}"></span>
+                    </td>
+
+                    <td style="padding:10px; text-align:center;" th:if="${mostrarSistema}" th:text="${f.sistema}"></td>
+
+                    <td style="padding:10px; text-align:center;"><strong th:text="${f.contada}"></strong></td>
+
+                    <td style="padding:10px; text-align:center;" th:if="${mostrarSistema}">
+                        <span th:if="${f.diferencia == 0}" class="dif-cero">0</span>
+                        <span th:if="${f.diferencia < 0}" class="dif-menos" th:text="${f.diferencia}"></span>
+                        <span th:if="${f.diferencia > 0}" class="dif-mas" th:text="'+' + ${f.diferencia}"></span>
+                    </td>
+
+                    <td style="padding:10px; text-align:right;" th:if="${esAdmin and mostrarSistema}"
+                        th:text="${f.diferencia == 0} ? '-' : ('$ ' + ${#numbers.formatInteger(f.valor, 1, 'POINT')})"></td>
+
+                    <td style="padding:10px;" th:if="${mostrarSistema}">
+
+                        <span th:if="${f.diferencia == 0}" class="ok-fila">Coincide</span>
+
+                        <th:block th:if="${f.diferencia != 0}">
+
+                            <span th:if="${conteo.estado.name() == 'PENDIENTE_REVISION' and f.conflicto}" class="nota-fila">
+                                <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+                                Otro conteo ya ajustó este producto después de que lo contaste.
+                            </span>
+
+                            <span th:if="${conteo.estado.name() == 'PENDIENTE_REVISION' and !f.conflicto}" class="gris-fila">Por revisar</span>
+
+                            <span th:if="${conteo.estado.name() == 'REVISADO' and f.estado == 'APLICADA'}" class="ok-fila"
+                                  th:text="'Ajustado: ' + ${f.stockAntes} + ' → ' + ${f.stockDespues}"></span>
+
+                            <span th:if="${conteo.estado.name() == 'REVISADO' and f.estado != 'APLICADA'}" class="gris-fila">No ajustado</span>
+
+                            <span th:if="${conteo.estado.name() == 'EN_CURSO'}" class="gris-fila">En curso</span>
+
+                        </th:block>
+
+                    </td>
+
+                </tr>
+
+                </tbody>
+
+            </table>
+
+            <div class="acciones-revision" th:if="${revisable}">
+
+                <form id="form-aplicar"
+                      method="post"
+                      th:action="@{/conteos/{id}/aplicar(id=${conteo.id})}"
+                      data-titulo="¿Aplicar los ajustes marcados?"
+                      data-confirmar="Se corregirá el stock de los productos marcados y el conteo quedará cerrado. Lo que no marcaste se queda como está."
+                      data-boton="Aplicar ajustes"
+                      data-icono="ti-adjustments"
+                      data-tipo="exito">
+                    <button type="submit" class="btn-aplicar"><i class="ti ti-adjustments" aria-hidden="true"></i>Aplicar ajustes marcados</button>
+                </form>
+
+                <form method="post"
+                      th:action="@{/conteos/{id}/descartar(id=${conteo.id})}"
+                      data-titulo="¿Cerrar sin ajustar?"
+                      data-confirmar="El conteo quedará cerrado y el stock no se modificará."
+                      data-boton="Cerrar sin ajustar"
+                      data-icono="ti-lock"
+                      data-tipo="peligro">
+                    <button type="submit" class="btn-cerrar-sin"><i class="ti ti-lock" aria-hidden="true"></i>Cerrar sin ajustar</button>
+                </form>
+
+            </div>
+
+            <div class="acciones-revision" th:if="${esAdmin and conteo.estado.name() == 'EN_CURSO'}">
+
+                <form method="post"
+                      th:action="@{/conteos/{id}/cancelar(id=${conteo.id})}"
+                      data-titulo="¿Cancelar este conteo?"
+                      data-confirmar="Se borrará lo que se había contado y el conteo quedará en la lista como cancelado, sin número. El inventario no se modifica."
+                      data-boton="Cancelar conteo"
+                      data-icono="ti-trash"
+                      data-tipo="peligro">
+                    <button type="submit" class="btn-cancelar-conteo"><i class="ti ti-trash" aria-hidden="true"></i>Cancelar conteo</button>
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="/js/confirmar.js"></script>
+<script src="/js/alertas.js"></script>
+
+<script>
+    (function () {
+        var maestra = document.getElementById('marcar-todas');
+
+        if (!maestra) return;
+
+        maestra.addEventListener('change', function () {
+            document.querySelectorAll('.casilla-linea').forEach(function (casilla) {
+                if (!casilla.disabled) {
+                    casilla.checked = maestra.checked;
+                }
+            });
+        });
+    })();
+</script>
+
+</body>
+</html>

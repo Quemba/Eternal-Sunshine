@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Solicitudes - Eternal Sunshine</title>
+
+    <link rel="stylesheet"
+          href="/css/dashboard.css">
+
+    <link rel="stylesheet"
+          href="/css/confirmar.css">
+
+    <link rel="stylesheet"
+          href="/css/alertas.css">
+</head>
+<body>
+
+<div class="dashboard">
+
+    <div class="sidebar">
+
+        <div class="logo-container">
+
+            <img src="/images/logo.png"
+                 class="logo">
+
+            <h2>Eternal Sunshine</h2>
+
+        </div>
+
+        <div th:replace="~{fragments/menu :: menu}"></div>
+
+    </div>
+
+    <div class="content">
+
+        <div class="header">
+
+            <h1>Solicitudes Pendientes</h1>
+
+        </div>
+
+        <div class="tabla">
+
+            <div th:replace="~{fragments/alertas :: alertas}"></div>
+
+            <p th:if="${#lists.isEmpty(solicitudes)}"
+               style="text-align:center; color:#888; padding:20px;">
+                No hay solicitudes pendientes.
+            </p>
+
+            <table style="width:100%; border-collapse: collapse;">
+
+                <thead>
+
+                <tr style="background:#df6794; color:white;">
+
+                    <th style="padding:10px;">Solicitante</th>
+
+                    <th style="padding:10px;">Acción</th>
+
+                    <th style="padding:10px;">Código</th>
+
+                    <th style="padding:10px;">Nombre</th>
+
+                    <th style="padding:10px;">Categoría</th>
+
+                    <th style="padding:10px;">Precio</th>
+
+                    <th style="padding:10px;">Cantidad</th>
+
+                    <th style="padding:10px;">Fecha</th>
+
+                    <th style="padding:10px;">Acciones</th>
+
+                </tr>
+
+                </thead>
+
+                <tbody>
+
+                <tr th:each="s : ${solicitudes}">
+
+                    <td style="padding:10px;" th:text="${s.usuarioSolicitante.username}"></td>
+
+                    <td style="padding:10px;" th:text="${s.accion.name() == 'CREAR_PRODUCTO'} ? 'Crear' : 'Editar'"></td>
+
+                    <td style="padding:10px;" th:text="${s.codigo}"></td>
+
+                    <td style="padding:10px;" th:text="${s.nombre}"></td>
+
+                    <td style="padding:10px;" th:text="${s.categoria}"></td>
+
+                    <td style="padding:10px;" th:text="'$ ' + ${#numbers.formatInteger(s.precio, 1, 'POINT')}"></td>
+
+                    <td style="padding:10px;" th:text="${s.cantidad}"></td>
+
+                    <td style="padding:10px;"
+                        th:text="${#temporals.format(s.fechaSolicitud, 'dd/MM/yyyy HH:mm')}"></td>
+
+                    <td style="padding:10px; white-space:nowrap;">
+
+    <form method="post"
+          th:action="@{/solicitudes/aprobar/{id}(id=${s.id})}"
+          class="form-icono"
+          data-titulo="¿Aprobar solicitud?"
+          th:data-confirmar="'Se aplicará el cambio de «' + ${s.nombre} + '» solicitado por ' + ${s.usuarioSolicitante.username} + '.'"
+          data-boton="Aprobar"
+          data-icono="ti-circle-check"
+          data-tipo="exito">
+
+        <button type="submit"
+                class="btn-icono ic-aprobar"
+                title="Aprobar solicitud">
+            <i class="ti ti-circle-check" aria-hidden="true"></i>
+        </button>
+
+    </form>
+
+    &nbsp;&nbsp;
+
+    <form method="post"
+          th:action="@{/solicitudes/rechazar/{id}(id=${s.id})}"
+          class="form-icono"
+          data-titulo="¿Rechazar solicitud?"
+          data-confirmar="No se aplicará ningún cambio al producto."
+          data-boton="Rechazar"
+          data-icono="ti-circle-x"
+          data-tipo="peligro">
+
+        <button type="submit"
+                class="btn-icono ic-rechazar"
+                title="Rechazar solicitud">
+            <i class="ti ti-circle-x" aria-hidden="true"></i>
+        </button>
+
+    </form>
+
+</td>
+
+                </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="/js/confirmar.js"></script>
+<script src="/js/alertas.js"></script>
+
+</body>
+</html>

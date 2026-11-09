@@ -1,5 +1,6 @@
 package com.eternalsunshine.web.repository;
 
+import com.eternalsunshine.web.entity.Rol;
 import com.eternalsunshine.web.entity.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -12,6 +13,8 @@ public interface UsuarioRepository
             String username,
             String password);
 
-    Usuario findByUsername(
+    Usuario findByUsernameIgnoreCase(
             String username);
+
+    long countByRol(Rol rol);
 }

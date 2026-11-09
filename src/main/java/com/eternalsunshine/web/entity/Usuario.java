@@ -10,15 +10,23 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(unique = true)
     private String username;
 
     private String password;
 
-    private String rol;
+    @Enumerated(EnumType.STRING)
+    private Rol rol;
 
     private String tienda;
 
+    private Boolean activo = true;
+
     public Usuario() {
+    }
+
+    public boolean estaActivo() {
+        return !Boolean.FALSE.equals(activo);
     }
 
     public Integer getId() {
@@ -45,11 +53,11 @@ public class Usuario {
         this.password = password;
     }
 
-    public String getRol() {
+    public Rol getRol() {
         return rol;
     }
 
-    public void setRol(String rol) {
+    public void setRol(Rol rol) {
         this.rol = rol;
     }
 
@@ -59,5 +67,13 @@ public class Usuario {
 
     public void setTienda(String tienda) {
         this.tienda = tienda;
+    }
+
+    public Boolean getActivo() {
+        return activo;
+    }
+
+    public void setActivo(Boolean activo) {
+        this.activo = activo;
     }
 }

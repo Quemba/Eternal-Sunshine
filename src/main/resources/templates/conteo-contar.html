@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Contando - Eternal Sunshine</title>
+
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="/css/escaner.css">
+    <link rel="stylesheet" href="/css/confirmar.css">
+
+    <style>
+        .fab-consulta, .panel-consulta, .consulta-capa { display:none !important; }
+
+        .venta-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:start; }
+        @media (max-width:900px) { .venta-grid { grid-template-columns:1fr; } }
+
+        .panel { background:white; padding:20px; border-radius:20px; box-shadow:0 4px 12px rgba(0,0,0,.15); }
+        .panel h3 { margin-top:0; color:#df6794; }
+
+        .buscador-fila { display:flex; gap:10px; }
+        #buscador { flex:1; min-width:0; padding:14px; border:2px solid #c29be7; border-radius:10px; font-size:16px; box-sizing:border-box; }
+        #btn-escanear { white-space:nowrap; }
+
+        .resultado-item { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid #eee; flex-wrap:wrap; }
+        .resultado-item small { display:block; color:#777; }
+        .resultado-item .acciones { display:flex; gap:8px; align-items:center; }
+        .resultado-item input { width:64px; padding:8px; border:2px solid #c29be7; border-radius:8px; }
+        .sin-resultados { color:#888; text-align:center; padding:14px; }
+
+        .vbtn { background:#df6794; color:white; border:none; padding:9px 14px; border-radius:8px; cursor:pointer; font-weight:bold; font-family:inherit; font-size:14px; text-decoration:none; display:inline-block; text-align:center; }
+        .vbtn:disabled { background:#ccc; cursor:not-allowed; }
+        .vbtn-sec { background:#c29be7; }
+        .vbtn-peligro { background:#b83255; }
+        .vbtn-chico { padding:6px 9px; }
+        .vbtn i { font-size:1.15em; vertical-align:-2px; }
+
+        .nota-ciega { display:flex; gap:8px; align-items:flex-start; margin:0 0 14px; padding:10px 12px; border-radius:12px; background:#fdf6f8; color:#8a6a73; font-size:13px; line-height:1.45; }
+        .nota-ciega i { font-size:18px; color:#df6794; margin-top:1px; }
+
+        .lista-tabla { width:100%; border-collapse:collapse; }
+        .lista-tabla th { background:#df6794; color:white; padding:10px; text-align:left; }
+        .lista-tabla td { padding:10px; border-bottom:1px solid #eee; vertical-align:middle; }
+        .lista-tabla small { display:block; color:#777; }
+        .lista-tabla .vacio { text-align:center; color:#888; padding:24px; }
+        .lista-tabla tr.tocada td { background:#fdf0f4; }
+        .cant-ctrl { display:flex; align-items:center; gap:6px; }
+        .cant-ctrl input { width:72px; text-align:center; padding:6px; border:2px solid #c29be7; border-radius:8px; font-size:15px; box-sizing:border-box; }
+
+        .lista-pie { margin-top:14px; }
+        #resumen-lista { color:#4a1020; font-weight:bold; }
+        #btn-registrar { width:100%; padding:16px; font-size:17px; border-radius:12px; margin-top:12px; }
+        .acciones-secundarias { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+        .acciones-secundarias form { flex:1; }
+        .acciones-secundarias a, .acciones-secundarias button { width:100%; box-sizing:border-box; }
+        .acciones-secundarias a { flex:1; }
+
+        #aviso { display:none; position:fixed; top:20px; left:50%; transform:translateX(-50%); padding:12px 22px; border-radius:12px; font-weight:bold; box-shadow:0 4px 14px rgba(0,0,0,.25); z-index:1000; max-width:90%; text-align:center; }
+        .aviso-error { background:#fdd; color:#900; }
+        .aviso-ok { background:#dfd; color:#060; }
+    </style>
+</head>
+<body>
+
+<div id="aviso" role="status" aria-live="polite"></div>
+
+<div class="dashboard">
+
+    <div class="sidebar">
+
+        <div class="logo-container">
+            <img src="/images/logo.png" class="logo">
+            <h2>Eternal Sunshine</h2>
+        </div>
+
+        <div th:replace="~{fragments/menu :: menu}"></div>
+
+    </div>
+
+    <div class="content">
+
+        <div class="header">
+            <h1>
+                Conteo en curso
+                <span th:if="${conteo.nombre != null}" th:text="'· ' + ${conteo.nombre}"></span>
+            </h1>
+        </div>
+
+        <div class="venta-grid">
+
+            <div class="panel">
+                <h3>Buscar producto</h3>
+
+                <div class="buscador-fila">
+                    <input type="text" id="buscador" placeholder="Escribe el código o el nombre..." autocomplete="off" autofocus>
+                    <button type="button" class="vbtn" id="btn-escanear"><i class="ti ti-scan" aria-hidden="true"></i> Escanear</button>
+                </div>
+
+                <div id="escaner-montaje" style="display:none;"></div>
+
+                <div id="resultados" style="margin-top:10px;"></div>
+            </div>
+
+            <div class="panel">
+                <h3>Lo que has contado</h3>
+
+                <p class="nota-ciega">
+                    <i class="ti ti-eye-off" aria-hidden="true"></i>
+                    <span>Conteo ciego: no ves cuántas unidades dice el sistema, para que cuentes con honestidad. Todo se guarda solo mientras avanzas.</span>
+                </p>
+
+                <table class="lista-tabla">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Contado</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-body"></tbody>
+                </table>
+
+                <div class="lista-pie">
+                    <div id="resumen-lista">0 productos · 0 unidades</div>
+                </div>
+
+                <form method="post"
+                      th:action="@{/conteos/{id}/enviar(id=${conteo.id})}"
+                      data-titulo="¿Enviar el conteo a revisión?"
+                      data-confirmar="Después de enviarlo no podrás cambiar lo que contaste. El administrador revisará las diferencias."
+                      data-boton="Sí, enviar"
+                      data-icono="ti-send"
+                      data-tipo="exito">
+                    <button type="submit" class="vbtn" id="btn-registrar" disabled><i class="ti ti-send" aria-hidden="true"></i> Enviar a revisión</button>
+                </form>
+
+                <div class="acciones-secundarias">
+
+                    <a href="/conteos" class="vbtn vbtn-sec"><i class="ti ti-arrow-left" aria-hidden="true"></i> Volver a la lista</a>
+
+                    <form method="post"
+                          th:action="@{/conteos/{id}/cancelar(id=${conteo.id})}"
+                          data-titulo="¿Cancelar este conteo?"
+                          data-confirmar="Se borrará lo que has contado y el conteo quedará en la lista como cancelado, sin número. El inventario no se modifica."
+                          data-boton="Cancelar conteo"
+                          data-icono="ti-trash"
+                          data-tipo="peligro">
+                        <button type="submit" class="vbtn vbtn-peligro"><i class="ti ti-trash" aria-hidden="true"></i> Cancelar conteo</button>
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="/js/quagga.min.js"></script>
+<script src="/js/escaner.js"></script>
+<script src="/js/confirmar.js"></script>
+
+<script th:inline="javascript">
+    const conteoId = /*[[${conteo.id}]]*/ 0;
+    const productos = /*[[${productos}]]*/ [];
+    let lineas = /*[[${lineas}]]*/ [];
+    const CANTIDAD_MAXIMA = 100000;
+
+    let cola = Promise.resolve();
+    let tocado = null;
+
+    const buscador = document.getElementById('buscador');
+    const resultados = document.getElementById('resultados');
+    const btnEscanear = document.getElementById('btn-escanear');
+    const btnEnviar = document.getElementById('btn-registrar');
+
+    let avisoTimer;
+    function aviso(texto, tipo) {
+        const a = document.getElementById('aviso');
+        a.textContent = texto;
+        a.className = (tipo === 'ok') ? 'aviso-ok' : 'aviso-error';
+        a.style.display = 'block';
+        clearTimeout(avisoTimer);
+        avisoTimer = setTimeout(function () { a.style.display = 'none'; }, 3500);
+
+        if (tipo !== 'ok' && typeof EscanerCodigo !== 'undefined') {
+            EscanerCodigo.pitidoError();
+        }
+    }
+
+    function crear(tag, texto, clase) {
+        const e = document.createElement(tag);
+        if (texto !== undefined && texto !== null) e.textContent = texto;
+        if (clase) e.className = clase;
+        return e;
+    }
+
+    function icono(clase) {
+        const i = document.createElement('i');
+        i.className = 'ti ' + clase;
+        i.setAttribute('aria-hidden', 'true');
+        return i;
+    }
+
+    function ponerBoton(boton, clase, texto) {
+        boton.textContent = '';
+        if (clase) boton.appendChild(icono(clase));
+        boton.appendChild(document.createTextNode(' ' + texto));
+    }
+
+    function peticion(accion, cuerpo) {
+        cola = cola.then(async function () {
+            try {
+                const respuesta = await fetch('/conteos/' + conteoId + '/' + accion, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(cuerpo)
+                });
+
+                let datos = null;
+                try {
+                    datos = await respuesta.json();
+                } catch (e) { }
+
+                if (respuesta.ok && datos && datos.ok) {
+                    lineas = datos.lineas;
+                    render();
+                    return true;
+                }
+
+                aviso((datos && datos.mensaje) || 'No se pudo guardar el conteo.', 'error');
+                render();
+                return false;
+
+            } catch (e) {
+                aviso('No se pudo guardar. Revisa tu conexión o vuelve a iniciar sesión.', 'error');
+                return false;
+            }
+        });
+
+        return cola;
+    }
+
+    function contarProducto(p, cantidad) {
+        if (!Number.isInteger(cantidad) || cantidad <= 0 || cantidad > CANTIDAD_MAXIMA) {
+            aviso('Ingresa una cantidad válida.', 'error');
+            return false;
+        }
+
+        tocado = p.id;
+        peticion('contar', { productoId: p.id, cantidad: cantidad });
+
+        buscador.value = '';
+        resultados.innerHTML = '';
+        return true;
+    }
+
+    function fijarCantidad(productoId, valor) {
+        const numero = parseInt(valor, 10);
+
+        if (!Number.isInteger(numero) || numero < 0 || numero > CANTIDAD_MAXIMA) {
+            aviso('La cantidad debe ser un número entre 0 y 100.000.', 'error');
+            render();
+            return;
+        }
+
+        tocado = productoId;
+        peticion('fijar', { productoId: productoId, cantidad: numero });
+    }
+
+    function quitar(productoId) {
+        tocado = null;
+        peticion('quitar', { productoId: productoId });
+    }
+
+    function filtrar() {
+        const texto = buscador.value.trim().toLowerCase();
+        resultados.innerHTML = '';
+        if (texto === '') return;
+
+        const encontrados = productos.filter(function (p) {
+            return p.nombre.toLowerCase().includes(texto) || p.codigo.toLowerCase().includes(texto);
+        }).slice(0, 8);
+
+        if (encontrados.length === 0) {
+            resultados.appendChild(crear('div', 'No se encontraron productos.', 'sin-resultados'));
+            return;
+        }
+
+        encontrados.forEach(function (p) {
+            const fila = crear('div', null, 'resultado-item');
+
+            const info = crear('div');
+            info.appendChild(crear('strong', p.nombre));
+            info.appendChild(crear('small', p.codigo));
+            fila.appendChild(info);
+
+            const acciones = crear('div', null, 'acciones');
+
+            const cant = document.createElement('input');
+            cant.type = 'number';
+            cant.min = '1';
+            cant.max = String(CANTIDAD_MAXIMA);
+            cant.value = '1';
+
+            const boton = crear('button', null, 'vbtn');
+            boton.type = 'button';
+            ponerBoton(boton, 'ti-plus', 'Contar');
+            boton.addEventListener('click', function () {
+                contarProducto(p, parseInt(cant.value, 10));
+            });
+
+            acciones.appendChild(cant);
+            acciones.appendChild(boton);
+            fila.appendChild(acciones);
+            resultados.appendChild(fila);
+        });
+    }
+
+    function render() {
+        const tbody = document.getElementById('lista-body');
+        tbody.innerHTML = '';
+
+        let unidades = 0;
+
+        if (lineas.length === 0) {
+            const tr = document.createElement('tr');
+            const td = crear('td', 'Aún no has contado nada. Escanea o busca un producto para empezar.', 'vacio');
+            td.colSpan = 3;
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+        }
+
+        const orden = lineas.slice().sort(function (a, b) {
+            if (a.productoId === tocado) return -1;
+            if (b.productoId === tocado) return 1;
+            return 0;
+        });
+
+        orden.forEach(function (item) {
+            unidades += item.cantidad;
+
+            const tr = document.createElement('tr');
+
+            if (item.productoId === tocado) {
+                tr.className = 'tocada';
+            }
+
+            const tdNombre = document.createElement('td');
+            tdNombre.appendChild(crear('strong', item.nombre));
+            tdNombre.appendChild(crear('small', item.codigo));
+            tr.appendChild(tdNombre);
+
+            const tdCant = document.createElement('td');
+            const ctrl = crear('div', null, 'cant-ctrl');
+
+            const menos = crear('button', null, 'vbtn vbtn-chico');
+            menos.type = 'button';
+            menos.disabled = item.cantidad <= 0;
+            menos.setAttribute('aria-label', 'Restar una unidad');
+            menos.appendChild(icono('ti-minus'));
+            menos.addEventListener('click', function () { fijarCantidad(item.productoId, item.cantidad - 1); });
+
+            const campo = document.createElement('input');
+            campo.type = 'number';
+            campo.min = '0';
+            campo.max = String(CANTIDAD_MAXIMA);
+            campo.value = String(item.cantidad);
+            campo.setAttribute('aria-label', 'Cantidad contada de ' + item.nombre);
+            campo.addEventListener('change', function () { fijarCantidad(item.productoId, campo.value); });
+            campo.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    campo.blur();
+                }
+            });
+
+            const mas = crear('button', null, 'vbtn vbtn-chico');
+            mas.type = 'button';
+            mas.setAttribute('aria-label', 'Sumar una unidad');
+            mas.appendChild(icono('ti-plus'));
+            mas.addEventListener('click', function () {
+                tocado = item.productoId;
+                peticion('contar', { productoId: item.productoId, cantidad: 1 });
+            });
+
+            ctrl.appendChild(menos);
+            ctrl.appendChild(campo);
+            ctrl.appendChild(mas);
+            tdCant.appendChild(ctrl);
+            tr.appendChild(tdCant);
+
+            const tdQuitar = document.createElement('td');
+            const quitarBtn = crear('button', null, 'vbtn vbtn-sec vbtn-chico');
+            quitarBtn.type = 'button';
+            quitarBtn.setAttribute('aria-label', 'Quitar ' + item.nombre + ' del conteo');
+            quitarBtn.appendChild(icono('ti-x'));
+            quitarBtn.addEventListener('click', function () { quitar(item.productoId); });
+            tdQuitar.appendChild(quitarBtn);
+            tr.appendChild(tdQuitar);
+
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById('resumen-lista').textContent =
+            lineas.length + (lineas.length === 1 ? ' producto' : ' productos') + ' · ' +
+            unidades + (unidades === 1 ? ' unidad' : ' unidades');
+
+        btnEnviar.disabled = lineas.length === 0;
+    }
+
+    buscador.addEventListener('input', filtrar);
+
+    buscador.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+
+        const texto = buscador.value.trim().toLowerCase();
+        if (texto === '') return;
+
+        let p = productos.find(function (x) { return x.codigo.toLowerCase() === texto; });
+        const porCodigo = !!p;
+
+        if (!p) {
+            p = productos.find(function (x) {
+                return x.nombre.toLowerCase().includes(texto) || x.codigo.toLowerCase().includes(texto);
+            });
+        }
+
+        if (!p) {
+            aviso('No se encontró ningún producto.', 'error');
+            return;
+        }
+
+        if (contarProducto(p, 1) && porCodigo) {
+            EscanerCodigo.pitido();
+        }
+    });
+
+    function normalizar(codigo) {
+        const t = String(codigo).trim();
+        return /^\d+$/.test(t) ? t.replace(/^0+/, '') : t.toLowerCase();
+    }
+
+    function buscarParecido(codigo) {
+        const leido = String(codigo).trim();
+
+        if (!/^\d{13}$/.test(leido)) return null;
+
+        const cola6 = leido.slice(-6);
+
+        const candidatos = productos.filter(function (p) {
+            const c = String(p.codigo).trim();
+            return /^\d{13}$/.test(c) && c.slice(-6) === cola6;
+        });
+
+        return candidatos.length === 1 ? candidatos[0] : null;
+    }
+
+    function preguntarParecido(leido, producto) {
+        escaner.pausar();
+        EscanerCodigo.pitidoAviso();
+
+        Confirmar.preguntar({
+            icono: 'ti-search',
+            titulo: '¿Quisiste decir este producto?',
+            mensaje: 'Leí ' + leido + ', que no está registrado, pero termina igual que «' + producto.nombre + '» (' + producto.codigo + ').',
+            textoConfirmar: 'Sí, contarlo',
+            textoCancelar: 'No',
+            enfocarAceptar: true
+        }, function () {
+            escaner.reanudar();
+
+            if (contarProducto(producto, 1)) {
+                EscanerCodigo.pitido();
+                aviso('Contado: ' + producto.nombre, 'ok');
+                escaner.marcar('ok');
+            } else {
+                escaner.marcar('error');
+            }
+        }, function () {
+            escaner.reanudar();
+            aviso('Código no encontrado: ' + leido, 'error');
+            escaner.marcar('error');
+        });
+    }
+
+    function procesarCodigo(codigo) {
+        try {
+            const buscado = normalizar(codigo);
+            const p = productos.find(function (x) { return normalizar(x.codigo) === buscado; });
+
+            if (p) {
+                if (contarProducto(p, 1)) {
+                    EscanerCodigo.pitido();
+                    aviso('Contado: ' + p.nombre, 'ok');
+                    return true;
+                }
+
+                return false;
+            }
+
+            const parecido = buscarParecido(codigo);
+
+            if (parecido) {
+                preguntarParecido(codigo, parecido);
+                return 'pendiente';
+            }
+
+            aviso('Código no encontrado: ' + codigo, 'error');
+            return false;
+
+        } catch (e) {
+            aviso('No se pudo procesar el código leído.', 'error');
+            return false;
+        }
+    }
+
+    const escaner = EscanerCodigo.crear({
+        montaje: document.getElementById('escaner-montaje'),
+        alIniciar: function () {
+            btnEscanear.disabled = true;
+            ponerBoton(btnEscanear, 'ti-camera', 'Abriendo cámara...');
+        },
+        alActivar: function () {
+            ponerBoton(btnEscanear, 'ti-camera', 'Cámara activa');
+        },
+        alCerrar: function () {
+            btnEscanear.disabled = false;
+            ponerBoton(btnEscanear, 'ti-scan', 'Escanear');
+        },
+        alError: function (mensaje) {
+            aviso(mensaje, 'error');
+        },
+        alLeer: function (codigo) {
+            return procesarCodigo(codigo);
+        }
+    });
+
+    btnEscanear.addEventListener('click', function () { escaner.abrir(); });
+    window.addEventListener('pagehide', function () { escaner.cerrar(); });
+
+    render();
+
+    if (!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches)) {
+        buscador.focus();
+    }
+</script>
+
+</body>
+</html>

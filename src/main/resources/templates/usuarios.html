@@ -4,8 +4,69 @@
     <meta charset="UTF-8">
     <title>Usuarios - Eternal Sunshine</title>
 
-    <link rel="stylesheet"
-          href="/css/dashboard.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="/css/confirmar.css">
+    <link rel="stylesheet" href="/css/alertas.css">
+
+    <style>
+        .nuevo-usuario { margin-bottom:24px; padding:20px; border-radius:18px; background:#fdf6f8; }
+        .nuevo-usuario h3 { margin:0 0 4px; color:#df6794; }
+        .nuevo-usuario .ayuda { margin:0 0 14px; color:#8a6a73; font-size:14px; line-height:1.5; }
+
+        .form-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:14px; align-items:end; }
+        .campo label { display:block; margin-bottom:6px; font-weight:bold; color:#4a1020; font-size:14px; }
+        .campo input, .campo select { width:100%; padding:12px; border:2px solid #c29be7; border-radius:10px; font-family:inherit; font-size:15px; background:#ffffff; box-sizing:border-box; }
+        .campo-clave { position:relative; }
+        .campo-clave input { padding-right:46px; }
+        .ver-clave { position:absolute; right:6px; bottom:6px; width:36px; height:36px; border:none; border-radius:8px; background:transparent; color:#8a6a73; cursor:pointer; font-size:20px; }
+        .ver-clave:hover { background:rgba(74,16,32,.08); }
+
+        .btn-principal { display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:13px 20px; border:none; border-radius:10px; background:#df6794; color:#ffffff; font-family:inherit; font-size:15px; font-weight:800; cursor:pointer; }
+        .btn-principal:hover { background:#cf4f81; }
+        .btn-principal i { font-size:20px; }
+        .acciones-form { margin-top:16px; }
+
+        .resumen-usuarios { margin:0 0 14px; color:#4a1020; font-weight:bold; }
+
+        .usuario { margin-bottom:12px; padding:16px; border-radius:18px; background:#ffffff; box-shadow:0 2px 10px rgba(74,16,32,.12); }
+        .usuario.inactivo { background:#f7f2f3; }
+        .usuario.inactivo .avatar { background:#b9a7ad; }
+        .usuario-cabecera { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+        .avatar { width:44px; height:44px; border-radius:50%; background:#df6794; color:#ffffff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px; flex-shrink:0; }
+        .usuario-datos { flex:1; min-width:140px; }
+        .usuario-datos strong { display:block; color:#4a1020; font-size:16px; word-break:break-word; }
+        .usuario-datos .sub { color:#8a6a73; font-size:13px; }
+
+        .chips { display:flex; gap:6px; flex-wrap:wrap; }
+        .chip { padding:4px 12px; border-radius:12px; font-size:13px; font-weight:800; white-space:nowrap; }
+        .chip-admin { background:#f3e8ff; color:#5b3a86; }
+        .chip-emp { background:#f3e8d3; color:#4a1020; }
+        .chip-ok { background:#e6f5ea; color:#1f6b3a; }
+        .chip-off { background:#eeeeee; color:#777777; }
+        .chip-yo { background:#fff3cd; color:#6b5400; }
+
+        details.gestionar { margin-top:12px; padding-top:10px; border-top:1px dashed #e5b3c4; }
+        details.gestionar summary { display:inline-flex; align-items:center; gap:6px; cursor:pointer; color:#df6794; font-weight:800; font-size:14px; list-style:none; }
+        details.gestionar summary::-webkit-details-marker { display:none; }
+        details.gestionar summary i { font-size:18px; }
+
+        .acciones-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:14px; margin-top:12px; }
+        .accion { padding:12px; border-radius:14px; background:#fdf6f8; }
+        .accion label { display:block; margin-bottom:6px; font-weight:bold; color:#4a1020; font-size:13px; }
+        .accion .fila { display:flex; gap:8px; }
+        .accion .fila input, .accion .fila select { flex:1; min-width:0; padding:10px; border:2px solid #c29be7; border-radius:10px; font-family:inherit; font-size:14px; background:#ffffff; box-sizing:border-box; }
+        .accion .campo-clave { flex:1; min-width:0; }
+        .accion .campo-clave input { width:100%; padding-right:44px; }
+        .accion .ver-clave { bottom:2px; right:2px; }
+
+        .btn-chico { padding:10px 14px; border:none; border-radius:10px; background:#df6794; color:#ffffff; font-family:inherit; font-size:14px; font-weight:800; cursor:pointer; white-space:nowrap; }
+        .btn-chico:hover { background:#cf4f81; }
+        .btn-peligro { background:#b83255; }
+        .btn-peligro:hover { background:#a02a49; }
+        .btn-ok { background:#2e9d57; }
+        .btn-ok:hover { background:#268a4b; }
+        .btn-ancho { width:100%; }
+    </style>
 </head>
 <body>
 
@@ -14,119 +75,229 @@
     <div class="sidebar">
 
         <div class="logo-container">
-
-            <img src="/images/logo.png"
-                 class="logo">
-
+            <img src="/images/logo.png" class="logo">
             <h2>Eternal Sunshine</h2>
-
         </div>
 
-        <div class="menu">
-
-            <a href="/">Dashboard</a>
-
-            <a href="/productos">Productos</a>
-
-            <a href="/usuarios">Usuarios</a>
-
-            <a href="/historial">Historial</a>
-
-            <a href="/login">Cerrar Sesión</a>
-
-        </div>
+        <div th:replace="~{fragments/menu :: menu}"></div>
 
     </div>
 
     <div class="content">
 
         <div class="header">
-
-            <h1>Gestión de Usuarios</h1>
-
+            <h1>Usuarios</h1>
         </div>
 
         <div class="tabla">
 
-            <h3>Usuarios Registrados</h3>
+            <div th:replace="~{fragments/alertas :: alertas}"></div>
 
-            <div style="margin-bottom:20px;">
+            <section class="nuevo-usuario">
 
-    <a href="/usuarios/nuevo"
-       class="action-btn btn-add">
+                <h3>Nuevo usuario</h3>
 
-        ➕ Agregar Usuario
+                <p class="ayuda">
+                    La contraseña debe tener entre 8 y 64 caracteres, con al menos una letra y un número.
+                    Entrégasela a la persona en privado: podrá cambiarla desde «Cambiar contraseña» en el menú.
+                </p>
 
-    </a>
+                <form method="post" action="/usuarios/crear" autocomplete="off">
 
-</div>
+                    <div class="form-grid">
 
-            <table style="width:100%; border-collapse: collapse;">
+                        <div class="campo">
+                            <label for="nu-username">Nombre de usuario</label>
+                            <input type="text" id="nu-username" name="username"
+                                   minlength="3" maxlength="50" required
+                                   autocomplete="off" autocapitalize="none" spellcheck="false"
+                                   th:value="${formUsername}">
+                        </div>
 
-                <thead>
+                        <div class="campo campo-clave">
+                            <label for="nu-password">Contraseña</label>
+                            <input type="password" id="nu-password" name="password"
+                                   minlength="8" maxlength="64" required
+                                   autocomplete="new-password">
+                            <button type="button" class="ver-clave" data-ver-clave="nu-password" aria-label="Mostrar contraseña">
+                                <i class="ti ti-eye" aria-hidden="true"></i>
+                            </button>
+                        </div>
 
-                <tr style="background:#df6794; color:white;">
+                        <div class="campo">
+                            <label for="nu-rol">Rol</label>
+                            <select id="nu-rol" name="rol" required>
+                                <option value="" disabled th:selected="${formRol == null or formRol == ''}">Elige un rol...</option>
+                                <option th:each="r : ${roles}"
+                                        th:value="${r.valor}"
+                                        th:text="${r.etiqueta}"
+                                        th:selected="${formRol != null and formRol == r.valor}"></option>
+                            </select>
+                        </div>
 
-                    <th style="padding:10px;">ID</th>
+                        <div class="campo">
+                            <label for="nu-tienda">Tienda (opcional)</label>
+                            <input type="text" id="nu-tienda" name="tienda"
+                                   maxlength="100" autocomplete="off"
+                                   th:value="${formTienda}">
+                        </div>
 
-                    <th style="padding:10px;">Usuario</th>
+                    </div>
 
-                    <th style="padding:10px;">Rol</th>
+                    <div class="acciones-form">
+                        <button type="submit" class="btn-principal">
+                            <i class="ti ti-user-plus" aria-hidden="true"></i>
+                            Crear usuario
+                        </button>
+                    </div>
 
-                    <th style="padding:10px;">Tienda</th>
+                </form>
 
-                    <th style="padding:10px;">Acciones</th>
+            </section>
 
-                </tr>
+            <p class="resumen-usuarios">
+                <span th:text="${#lists.size(usuarios)}"></span>
+                <span th:text="${#lists.size(usuarios) == 1} ? 'usuario' : 'usuarios'"></span>
+            </p>
 
-                </thead>
+            <article class="usuario"
+                     th:each="u : ${usuarios}"
+                     th:classappend="${!u.estaActivo()} ? 'inactivo'">
 
-                <tbody>
+                <div class="usuario-cabecera">
 
-                <tr th:each="usuario : ${usuarios}">
+                    <div class="avatar"
+                         th:text="${#strings.isEmpty(u.username)} ? '?' : ${#strings.toUpperCase(#strings.substring(u.username, 0, 1))}">A</div>
 
-                    <td style="padding:10px;"
-                        th:text="${usuario.id}">
-                    </td>
+                    <div class="usuario-datos">
+                        <strong th:text="${u.username}"></strong>
+                        <span class="sub" th:if="${u.tienda != null and !#strings.isEmpty(u.tienda)}" th:text="${u.tienda}"></span>
+                    </div>
 
-                    <td style="padding:10px;"
-                        th:text="${usuario.username}">
-                    </td>
+                    <div class="chips">
+                        <span class="chip"
+                              th:classappend="${u.rol != null and u.rol.name() == 'ADMIN'} ? 'chip-admin' : 'chip-emp'"
+                              th:text="${u.rol != null and u.rol.name() == 'ADMIN'} ? 'Administrador' : 'Empleado'"></span>
+                        <span class="chip"
+                              th:classappend="${u.estaActivo()} ? 'chip-ok' : 'chip-off'"
+                              th:text="${u.estaActivo()} ? 'Activo' : 'Desactivado'"></span>
+                        <span class="chip chip-yo" th:if="${u.id == miId}">Tú</span>
+                    </div>
 
-                    <td style="padding:10px;"
-                        th:text="${usuario.rol}">
-                    </td>
+                </div>
 
-                    <td style="padding:10px;"
-                        th:text="${usuario.tienda}">
-                    </td>
+                <details class="gestionar" th:if="${u.id != miId}">
 
-                    <td style="padding:10px;">
+                    <summary><i class="ti ti-settings" aria-hidden="true"></i> Gestionar</summary>
 
-    <a th:href="@{/usuarios/editar/{id}(id=${usuario.id})}">
-        ✏️
-    </a>
+                    <div class="acciones-grid">
 
-    &nbsp;&nbsp;
+                        <form method="post"
+                              th:action="@{/usuarios/{id}/rol(id=${u.id})}"
+                              class="accion"
+                              data-titulo="¿Cambiar el rol?"
+                              th:data-confirmar="'«' + ${u.username} + '» cambiará de rol. Si ya tiene la sesión abierta, se aplica en menos de un minuto.'"
+                              data-boton="Cambiar rol"
+                              data-icono="ti-user-cog"
+                              data-tipo="exito">
 
-    <a th:href="@{/usuarios/eliminar/{id}(id=${usuario.id})}"
-       onclick="return confirm('¿Eliminar usuario?')">
-        🗑️
-    </a>
+                            <label th:for="'rol-' + ${u.id}">Rol</label>
 
-</td>
+                            <div class="fila">
+                                <select name="rol" th:id="'rol-' + ${u.id}">
+                                    <option th:each="r : ${roles}"
+                                            th:value="${r.valor}"
+                                            th:text="${r.etiqueta}"
+                                            th:selected="${u.rol != null and u.rol.name() == r.valor}"></option>
+                                </select>
+                                <button type="submit" class="btn-chico">Cambiar</button>
+                            </div>
 
-                </tr>
+                        </form>
 
-                </tbody>
+                        <form method="post"
+                              th:action="@{/usuarios/{id}/password(id=${u.id})}"
+                              class="accion"
+                              autocomplete="off"
+                              data-titulo="¿Restablecer la contraseña?"
+                              th:data-confirmar="'Se cambiará la contraseña de «' + ${u.username} + '» y su sesión abierta, si tiene una, se cerrará en menos de un minuto.'"
+                              data-boton="Restablecer"
+                              data-icono="ti-key"
+                              data-tipo="peligro">
 
-            </table>
+                            <label th:for="'rp-' + ${u.id}">Nueva contraseña</label>
+
+                            <div class="fila">
+                                <div class="campo-clave">
+                                    <input type="password" name="password" th:id="'rp-' + ${u.id}"
+                                           minlength="8" maxlength="64" required
+                                           autocomplete="new-password">
+                                    <button type="button" class="ver-clave"
+                                            th:attr="data-ver-clave='rp-' + ${u.id}"
+                                            aria-label="Mostrar contraseña">
+                                        <i class="ti ti-eye" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                                <button type="submit" class="btn-chico btn-peligro">Restablecer</button>
+                            </div>
+
+                        </form>
+
+                        <form method="post"
+                              th:action="@{/usuarios/{id}/estado(id=${u.id})}"
+                              class="accion"
+                              th:data-titulo="${u.estaActivo()} ? '¿Desactivar este usuario?' : '¿Reactivar este usuario?'"
+                              th:data-confirmar="${u.estaActivo()} ? ('«' + ${u.username} + '» ya no podrá iniciar sesión y su sesión abierta se cerrará en menos de un minuto. Su historial se conserva.') : ('«' + ${u.username} + '» podrá volver a iniciar sesión.')"
+                              th:data-boton="${u.estaActivo()} ? 'Desactivar' : 'Reactivar'"
+                              th:data-icono="${u.estaActivo()} ? 'ti-user-off' : 'ti-user-check'"
+                              th:data-tipo="${u.estaActivo()} ? 'peligro' : 'exito'">
+
+                            <input type="hidden" name="activo" th:value="${!u.estaActivo()}">
+
+                            <label>Acceso</label>
+
+                            <button type="submit" class="btn-chico btn-ancho"
+                                    th:classappend="${u.estaActivo()} ? 'btn-peligro' : 'btn-ok'"
+                                    th:text="${u.estaActivo()} ? 'Desactivar usuario' : 'Reactivar usuario'"></button>
+
+                        </form>
+
+                    </div>
+
+                </details>
+
+            </article>
 
         </div>
 
     </div>
 
 </div>
+
+<script src="/js/confirmar.js"></script>
+<script src="/js/alertas.js"></script>
+
+<script>
+    document.querySelectorAll('[data-ver-clave]').forEach(function (boton) {
+        boton.addEventListener('click', function () {
+            var campo = document.getElementById(boton.getAttribute('data-ver-clave'));
+
+            if (!campo) return;
+
+            var oculto = campo.type === 'password';
+
+            campo.type = oculto ? 'text' : 'password';
+
+            var icono = boton.querySelector('i');
+
+            if (icono) {
+                icono.className = 'ti ' + (oculto ? 'ti-eye-off' : 'ti-eye');
+            }
+
+            boton.setAttribute('aria-label', oculto ? 'Ocultar contraseña' : 'Mostrar contraseña');
+        });
+    });
+</script>
 
 </body>
 </html>

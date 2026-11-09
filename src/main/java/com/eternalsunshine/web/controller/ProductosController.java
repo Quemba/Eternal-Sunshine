@@ -1,7 +1,12 @@
 package com.eternalsunshine.web.controller;
 
 import com.eternalsunshine.web.entity.Producto;
-import com.eternalsunshine.web.service.ProductoService;
+import com.eternalsunshine.web.entity.Rol;
+import com.eternalsunshine.web.entity.Usuario;
+import com.eternalsunshine.web.repository.ProductoRepository;
+import com.eternalsunshine.web.service.PaginaVista;
+import com.eternalsunshine.web.service.ProductoConsultaService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,37 +19,57 @@ import java.util.List;
 public class ProductosController {
 
     @Autowired
-    private ProductoService productoService;
+    private ProductoConsultaService productoConsultaService;
+
+    @Autowired
+    private ProductoRepository productoRepository;
 
     @GetMapping("/productos")
     public String mostrarProductos(
-            @RequestParam(required = false)
-            String buscar,
-            Model model) {
+            @RequestParam(defaultValue = "") String buscar,
+            @RequestParam(defaultValue = "") String categoria,
+            @RequestParam(defaultValue = "") String estado,
+            @RequestParam(defaultValue = "1") int pagina,
+            Model model,
+            HttpSession session) {
 
-        List<Producto> productos;
+        PaginaVista<Producto> resultado =
+                productoConsultaService.buscar(buscar, categoria, estado, pagina);
 
-        if (buscar != null &&
-                !buscar.trim().isEmpty()) {
+        model.addAttribute("resultado", resultado);
+        model.addAttribute("categorias", productoConsultaService.categorias());
 
-            productos =
-                    productoService.buscar(
-                            buscar);
+        model.addAttribute("buscar", buscar.trim());
+        model.addAttribute("categoriaSel", categoria.trim());
+        model.addAttribute("estado", estado.trim());
 
-        } else {
+        boolean hayFiltros = !buscar.trim().isEmpty()
+                || !categoria.trim().isEmpty()
+                || !estado.trim().isEmpty();
+        model.addAttribute("hayFiltros", hayFiltros);
 
-            productos =
-                    productoService.obtenerTodos();
-        }
-
-        model.addAttribute(
-                "productos",
-                productos);
-
-        model.addAttribute(
-                "buscar",
-                buscar);
+        Usuario usuario = (Usuario) session.getAttribute("usuarioLogueado");
+        model.addAttribute("esAdmin", usuario != null && Rol.ADMIN.equals(usuario.getRol()));
 
         return "productos";
+    }
+
+    @GetMapping("/productos/por-agotarse")
+    public String porAgotarse(Model model, HttpSession session) {
+
+        List<Producto> lista = productoRepository.findByCantidadLessThanEqualOrderByCantidadAscNombreAsc(5);
+
+        long sinStock = lista.stream()
+                .filter(p -> p.getCantidad() != null && p.getCantidad() == 0)
+                .count();
+
+        model.addAttribute("productos", lista);
+        model.addAttribute("sinStock", sinStock);
+        model.addAttribute("stockBajoLista", lista.size() - sinStock);
+
+        Usuario usuario = (Usuario) session.getAttribute("usuarioLogueado");
+        model.addAttribute("esAdmin", usuario != null && Rol.ADMIN.equals(usuario.getRol()));
+
+        return "productos-por-agotarse";
     }
 }

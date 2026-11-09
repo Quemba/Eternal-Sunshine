@@ -6,6 +6,20 @@
 
     <link rel="stylesheet"
           href="/css/dashboard.css">
+
+    <link rel="stylesheet"
+          href="/css/confirmar.css">
+
+    <link rel="stylesheet"
+          href="/css/alertas.css">
+
+    <link rel="stylesheet"
+          href="/css/listas.css">
+
+    <style>
+        .filtros-productos { display:flex; flex-wrap:wrap; gap:12px; align-items:center; flex:1; min-width:0; }
+        .filtros-productos select { padding:10px 12px; border:2px solid #c29be7; border-radius:10px; font-family:inherit; font-size:14px; background:white; }
+    </style>
 </head>
 <body>
 
@@ -22,19 +36,7 @@
 
         </div>
 
-        <div class="menu">
-
-            <a href="/">Dashboard</a>
-
-            <a href="/productos">Productos</a>
-
-            <a href="#">Usuarios</a>
-
-            <a href="/historial">Historial</a>
-
-            <a href="/login">Cerrar Sesión</a>
-
-        </div>
+        <div th:replace="~{fragments/menu :: menu}"></div>
 
     </div>
 
@@ -48,54 +50,118 @@
 
         <div class="tabla">
 
+            <div th:replace="~{fragments/alertas :: alertas}"></div>
+
             <div class="toolbar">
 
     <form action="/productos"
-      method="get"
-      class="search-box">
+          method="get"
+          class="filtros-productos"
+          id="form-filtros"
+          role="search">
 
-    <img src="/images/search.png"
-         width="24">
+        <div class="search-box">
 
-    <input type="text"
-           name="buscar"
-           th:value="${buscar}"
-           placeholder="Buscar producto...">
+            <i class="ti ti-search" aria-hidden="true"></i>
 
-    <button type="submit"
-            style="display:none;">
-    </button>
+            <input type="text"
+                   id="campo-buscar"
+                   name="buscar"
+                   th:value="${buscar}"
+                   autocomplete="off"
+                   aria-label="Buscar producto"
+                   placeholder="Buscar producto...">
 
-</form>
+        </div>
+
+        <select name="categoria" aria-label="Filtrar por categoría">
+            <option value="">Todas las categorías</option>
+            <option th:each="c : ${categorias}"
+                    th:value="${c}"
+                    th:text="${c}"
+                    th:selected="${categoriaSel == c}"></option>
+        </select>
+
+        <select name="estado" aria-label="Filtrar por estado">
+            <option value="">Todos los estados</option>
+            <option value="agotado" th:selected="${estado == 'agotado'}">Agotados</option>
+            <option value="bajo" th:selected="${estado == 'bajo'}">Stock bajo (1 a 5)</option>
+            <option value="disponible" th:selected="${estado == 'disponible'}">Disponibles</option>
+        </select>
+
+        <button type="button" class="btn-limpiar" data-limpiar hidden>Limpiar</button>
+
+        <button type="submit" style="display:none;"></button>
+
+    </form>
 
     <div class="actions">
 
         <a href="/productos/nuevo"
             class="action-btn btn-add">
 
-        <img src="/images/add.png">
+        <i class="ti ti-plus" aria-hidden="true"></i>
 
         Agregar
 
         </a>
 
-        <a href="/productos/exportar"
-   class="action-btn btn-export">
+        <div class="exportar" th:if="${esAdmin}">
 
-    <img src="/images/export.png">
+            <a href="#"
+               class="action-btn btn-export"
+               id="btn-exportar"
+               role="button"
+               aria-haspopup="true"
+               aria-expanded="false">
 
-    Exportar
+                <i class="ti ti-download" aria-hidden="true"></i>
 
-</a>
+                Exportar
 
+                <i class="ti ti-chevron-down" aria-hidden="true"></i>
+
+            </a>
+
+            <div class="exportar-menu" id="menu-exportar" role="menu" hidden>
+
+                <a role="menuitem"
+                   th:href="@{/productos/exportar(formato='excel', buscar=${buscar}, categoria=${categoriaSel}, estado=${estado})}">
+                    <i class="ti ti-file-spreadsheet" aria-hidden="true"></i>
+                    Excel (.xlsx)
+                </a>
+
+                <a role="menuitem"
+                   th:href="@{/productos/exportar(formato='pdf', buscar=${buscar}, categoria=${categoriaSel}, estado=${estado})}">
+                    <i class="ti ti-file-type-pdf" aria-hidden="true"></i>
+                    PDF
+                </a>
+
+            </div>
+
+        </div>
 
     </div>
 
 </div>
 
+            <div id="resultados-productos" class="zona-viva" aria-live="polite">
+
             <h3>Productos Registrados</h3>
 
-            <table style="width:100%; border-collapse: collapse;">
+            <p class="resumen" th:if="${resultado.total > 0}">
+                Mostrando
+                <strong th:text="${resultado.desdeRegistro}"></strong>–<strong th:text="${resultado.hastaRegistro}"></strong>
+                de <strong th:text="${resultado.total}"></strong>
+                <span th:text="${resultado.total == 1} ? 'producto' : 'productos'"></span>
+            </p>
+
+            <p class="vacio" th:if="${resultado.total == 0}">
+                <span th:if="${hayFiltros}">No se encontraron productos con esos filtros. <a href="/productos" data-limpiar-todo>Limpiar filtros</a></span>
+                <span th:unless="${hayFiltros}">Todavía no hay productos registrados.</span>
+            </p>
+
+            <table th:if="${resultado.total > 0}" style="width:100%; border-collapse: collapse;">
 
                 <thead>
 
@@ -119,7 +185,7 @@
 
                 <tbody>
 
-                <tr th:each="producto : ${productos}">
+                <tr th:each="producto : ${resultado.filas}">
 
                     <td style="padding:10px;"
                         th:text="${producto.codigo}">
@@ -134,25 +200,43 @@
                     </td>
 
                     <td style="padding:10px;"
-                        th:text="${producto.precio}">
+                        th:text="'$ ' + ${#numbers.formatInteger(producto.precio, 1, 'POINT')}">
                     </td>
 
                     <td style="padding:10px;"
                         th:text="${producto.cantidad}">
                     </td>
 
-                    <td style="padding:10px;">
+                    <td style="padding:10px; white-space:nowrap;">
 
-    <a th:href="@{/productos/editar/{id}(id=${producto.id})}">
-        ✏️
+    <a th:href="@{/productos/editar/{id}(id=${producto.id})}"
+       class="enlace-icono ic-editar"
+       title="Editar producto">
+        <i class="ti ti-pencil" aria-hidden="true"></i>
     </a>
 
-    &nbsp;&nbsp;
+    <span th:if="${esAdmin}">
 
-    <a th:href="@{/productos/eliminar/{id}(id=${producto.id})}"
-       onclick="return confirm('¿Eliminar producto?')">
-        🗑️
-    </a>
+        &nbsp;&nbsp;
+
+        <form method="post"
+              th:action="@{/productos/eliminar/{id}(id=${producto.id})}"
+              class="form-icono"
+              data-titulo="¿Eliminar producto?"
+              th:data-confirmar="'Vas a eliminar «' + ${producto.nombre} + '». Esta acción no se puede deshacer.'"
+              data-boton="Eliminar"
+              data-icono="ti-trash"
+              data-tipo="peligro">
+
+            <button type="submit"
+                    class="btn-icono ic-eliminar"
+                    title="Eliminar producto">
+                <i class="ti ti-trash" aria-hidden="true"></i>
+            </button>
+
+        </form>
+
+    </span>
 
 </td>
 
@@ -162,11 +246,98 @@
 
             </table>
 
+            <div th:replace="~{fragments/paginacion :: nav(${resultado})}"></div>
+
+            </div>
+
         </div>
 
     </div>
 
 </div>
+
+<script src="/js/confirmar.js"></script>
+<script src="/js/alertas.js"></script>
+<script src="/js/lista-viva.js"></script>
+
+<script>
+    (function () {
+        var boton = document.getElementById('btn-exportar');
+        var menu = document.getElementById('menu-exportar');
+
+        if (!boton || !menu) return;
+
+        function cerrar() {
+            menu.hidden = true;
+            boton.setAttribute('aria-expanded', 'false');
+        }
+
+        boton.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            var abrir = menu.hidden;
+            menu.hidden = !abrir;
+            boton.setAttribute('aria-expanded', abrir ? 'true' : 'false');
+        });
+
+        menu.addEventListener('click', function () {
+            setTimeout(cerrar, 150);
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.exportar')) {
+                cerrar();
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                cerrar();
+            }
+        });
+    })();
+</script>
+
+<script>
+    function actualizarEnlacesExportar() {
+        var formulario = document.getElementById('form-filtros');
+
+        if (!formulario) return;
+
+        var datos = new FormData(formulario);
+
+        document.querySelectorAll('#menu-exportar a').forEach(function (enlace) {
+            var url = new URL(enlace.getAttribute('href'), window.location.origin);
+
+            ['buscar', 'categoria', 'estado'].forEach(function (nombre) {
+                var valor = String(datos.get(nombre) || '').trim();
+
+                if (valor !== '') {
+                    url.searchParams.set(nombre, valor);
+                } else {
+                    url.searchParams.delete(nombre);
+                }
+            });
+
+            enlace.setAttribute('href', url.pathname + url.search);
+        });
+    }
+
+    ListaViva.iniciar({
+        formulario: '#form-filtros',
+        zona: '#resultados-productos',
+        url: '/productos',
+        alActualizar: actualizarEnlacesExportar
+    });
+
+    document.getElementById('campo-buscar').addEventListener('input', actualizarEnlacesExportar);
+
+    document.querySelectorAll('#form-filtros select').forEach(function (campo) {
+        campo.addEventListener('change', actualizarEnlacesExportar);
+    });
+
+    actualizarEnlacesExportar();
+</script>
 
 </body>
 </html>

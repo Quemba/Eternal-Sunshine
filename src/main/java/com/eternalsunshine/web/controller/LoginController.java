@@ -1,8 +1,11 @@
 package com.eternalsunshine.web.controller;
 
+import com.eternalsunshine.web.config.LoginIntentosService;
 import com.eternalsunshine.web.entity.Usuario;
-import com.eternalsunshine.web.service.ProductoService;
 import com.eternalsunshine.web.service.UsuarioService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -15,11 +18,10 @@ public class LoginController {
     private UsuarioService usuarioService;
 
     @Autowired
-    private ProductoService productoService;
+    private LoginIntentosService intentos;
 
     @GetMapping("/login")
     public String mostrarLogin() {
-
         return "login";
     }
 
@@ -27,7 +29,31 @@ public class LoginController {
     public String procesarLogin(
             @RequestParam String username,
             @RequestParam String password,
+            HttpServletRequest request,
+            HttpServletResponse response,
             Model model) {
+
+        String ip = request.getRemoteAddr();
+
+        if (ip == null) {
+            ip = "desconocida";
+        }
+
+        long espera = intentos.milisegundosBloqueado(ip, username);
+
+        if (espera > 0) {
+
+            long minutos = (espera + 59_999) / 60_000;
+
+            model.addAttribute(
+                    "error",
+                    "Demasiados intentos fallidos. Inténtalo de nuevo en "
+                            + minutos + (minutos == 1 ? " minuto." : " minutos."));
+
+            response.setStatus(429);
+
+            return "login";
+        }
 
         Usuario usuario =
                 usuarioService.login(
@@ -36,33 +62,27 @@ public class LoginController {
 
         if (usuario != null) {
 
-            model.addAttribute(
-                    "usuario",
-                    usuario.getUsername());
+            intentos.registrarExito(ip, username);
 
-            model.addAttribute(
-                    "totalProductos",
-                    productoService.obtenerTotalProductos());
+            HttpSession sesion = request.getSession(true);
+            request.changeSessionId();
+            sesion.setAttribute("usuarioLogueado", usuario);
 
-            model.addAttribute(
-                    "stockBajo",
-                    productoService.obtenerStockBajo());
-
-            model.addAttribute(
-                    "agotados",
-                    productoService.obtenerAgotados());
-
-            model.addAttribute(
-                    "valorInventario",
-                    productoService.obtenerValorInventario());
-
-            return "dashboard";
+            return "redirect:/";
         }
+
+        intentos.registrarFallo(ip, username);
 
         model.addAttribute(
                 "error",
                 "Usuario o contraseña incorrectos");
 
         return "login";
+    }
+
+    @PostMapping("/logout")
+    public String logout(HttpSession session) {
+        session.invalidate();
+        return "redirect:/login";
     }
 }

@@ -1,6 +1,7 @@
 package com.eternalsunshine.web.service;
 
 import com.eternalsunshine.web.entity.Historial;
+import com.eternalsunshine.web.entity.Usuario;
 import com.eternalsunshine.web.repository.HistorialRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,7 +16,7 @@ public class HistorialService {
     private HistorialRepository historialRepository;
 
     public void registrar(
-            String usuario,
+            Usuario usuario,
             String accion) {
 
         Historial historial =

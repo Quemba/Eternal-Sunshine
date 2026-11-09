@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 public interface HistorialRepository
         extends JpaRepository<Historial, Integer> {
 
+    boolean existsByUsuario_Id(Integer usuarioId);
 }

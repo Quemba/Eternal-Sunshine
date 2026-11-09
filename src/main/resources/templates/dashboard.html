@@ -7,6 +7,38 @@
 
     <link rel="stylesheet"
           href="/css/dashboard.css">
+
+    <style>
+        .seccion-titulo { color:#4a1020; margin:30px 0 14px; }
+
+        .alerta-reab { background:#fff3cd; color:#6b5400; border-radius:14px; padding:14px 18px; margin-top:20px; font-size:15px; }
+        .alerta-reab i { font-size:20px; margin-right:6px; vertical-align:-4px; }
+        .alerta-reab a { color:#df6794; font-weight:bold; margin-left:8px; text-decoration:none; }
+        .alerta-reab a:hover { text-decoration:underline; }
+
+        .ventas-resumen { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; }
+
+        .stat-venta { background:white; border-radius:20px; padding:20px; box-shadow:0 4px 12px rgba(0,0,0,.15); text-align:center; min-width:0; }
+        .stat-venta span { display:block; color:#777; font-size:14px; margin-bottom:6px; }
+        .stat-venta strong { font-size:30px; color:#4a1020; }
+
+        .graficas { display:grid; grid-template-columns:repeat(auto-fit, minmax(340px, 1fr)); gap:16px; margin-top:16px; }
+
+        .grafica-panel { background:white; border-radius:20px; padding:20px; box-shadow:0 4px 12px rgba(0,0,0,.15); min-width:0; }
+        .grafica-panel h3 { margin:0 0 12px; color:#df6794; }
+        .grafica-caja { position:relative; height:280px; }
+        .sin-datos { text-align:center; color:#888; padding:80px 10px; }
+
+        .panel-lista { background:white; border-radius:20px; padding:20px; box-shadow:0 4px 12px rgba(0,0,0,.15); }
+        .panel-lista table { width:100%; border-collapse:collapse; }
+        .panel-lista th { background:#df6794; color:white; padding:10px; text-align:left; }
+        .panel-lista td { padding:10px; border-bottom:1px solid #eee; }
+        .agotado-tag { color:#900; font-weight:bold; }
+        .ok-msg { text-align:center; color:#060; padding:20px; }
+        .ver-lista { display:block; text-align:right; margin-top:14px; color:#df6794; font-weight:bold; text-decoration:none; }
+        .ver-lista:hover { text-decoration:underline; }
+        .ver-lista i { font-size:18px; vertical-align:-3px; margin-left:4px; }
+    </style>
 </head>
 <body>
 
@@ -23,19 +55,7 @@
 
         </div>
 
-        <div class="menu">
-
-            <a href="/">Dashboard</a>
-
-            <a href="/productos">Productos</a>
-
-            <a href="/usuarios">Usuarios</a>
-
-            <a href="/historial">Historial</a>
-
-            <a href="/login">Cerrar Sesión</a>
-
-        </div>
+        <div th:replace="~{fragments/menu :: menu}"></div>
 
     </div>
 
@@ -44,62 +64,288 @@
         <div class="header">
 
             <h1>
-                Bienvenido,
+                <span id="saludo">Bienvenido</span>,
                 <span th:text="${usuario}"></span>
             </h1>
+
+            <p class="fecha-hoy" id="fecha-hoy"></p>
 
         </div>
 
         <div class="cards">
 
-            <div class="card card-total">
+            <div class="card card-total" th:if="${esAdmin}">
+
+                <div class="card-icono"><i class="ti ti-wallet" aria-hidden="true"></i></div>
 
                 Total Inventario
 
-                <h2 th:text="${'$ ' + #numbers.formatDecimal(valorInventario, 0, 'POINT', 0, 'COMMA')}"></h2>
+                <h2 data-contar th:text="${'$ ' + #numbers.formatDecimal(valorInventario, 0, 'POINT', 0, 'COMMA')}"></h2>
 
             </div>
 
             <div class="card card-productos">
 
+                <div class="card-icono"><i class="ti ti-package" aria-hidden="true"></i></div>
+
                 Productos
 
-                <h2 th:text="${totalProductos}"></h2>
+                <h2 data-contar th:text="${totalProductos}"></h2>
 
             </div>
 
             <div class="card card-stock">
 
+                <div class="card-icono"><i class="ti ti-alert-triangle" aria-hidden="true"></i></div>
+
                 Stock Bajo
 
-                <h2 th:text="${stockBajo}"></h2>
+                <h2 data-contar th:text="${stockBajo}"></h2>
 
             </div>
 
             <div class="card card-agotados">
 
+                <div class="card-icono"><i class="ti ti-circle-x" aria-hidden="true"></i></div>
+
                 Agotados
 
-                <h2 th:text="${agotados}"></h2>
+                <h2 data-contar th:text="${agotados}"></h2>
 
             </div>
 
         </div>
 
-        <div class="tabla">
+        <div th:if="${esAdmin}">
 
-            <h3>Productos</h3>
+            <div th:if="${alertasReabastecimiento > 0}" class="alerta-reab">
+                <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+                <strong th:text="${alertasReabastecimiento}"></strong> productos necesitan reabastecerse
+                (<span th:text="${alertasUrgentes}"></span> urgentes).
+                <a href="/reabastecimiento">Ver sugerencias</a>
+            </div>
 
-            <p>
-                Aquí aparecerá la tabla real de productos
-                cuando migremos RegistroFrame.
+            <h2 class="seccion-titulo">Ventas de hoy</h2>
+
+            <div class="ventas-resumen">
+
+                <div class="stat-venta">
+                    <span>Vendido hoy</span>
+                    <strong data-contar th:text="'$ ' + ${#numbers.formatInteger(vendidoHoy, 1, 'POINT')}"></strong>
+                </div>
+
+                <div class="stat-venta">
+                    <span>Ventas realizadas</span>
+                    <strong data-contar th:text="${ventasHoy}"></strong>
+                </div>
+
+                <div class="stat-venta">
+                    <span>Unidades vendidas</span>
+                    <strong data-contar th:text="${unidadesHoy}"></strong>
+                </div>
+
+            </div>
+
+            <div class="graficas">
+
+                <div class="grafica-panel">
+                    <h3>Ventas de los últimos 7 días</h3>
+                    <div class="grafica-caja">
+                        <canvas id="grafica-semana"></canvas>
+                    </div>
+                </div>
+
+                <div class="grafica-panel">
+                    <h3>Más vendidos (último mes)</h3>
+                    <div th:if="${#lists.isEmpty(nombresTop)}" class="sin-datos">
+                        Aún no hay ventas registradas.
+                    </div>
+                    <div th:unless="${#lists.isEmpty(nombresTop)}" class="grafica-caja">
+                        <canvas id="grafica-top"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div th:unless="${esAdmin}">
+
+            <h2 class="seccion-titulo">Tu día</h2>
+
+            <div class="ventas-resumen">
+
+                <div class="stat-venta">
+                    <span>Tus ventas de hoy</span>
+                    <strong data-contar th:text="${misVentasHoy}"></strong>
+                </div>
+
+                <div class="stat-venta">
+                    <span>Unidades que vendiste</span>
+                    <strong data-contar th:text="${misUnidadesHoy}"></strong>
+                </div>
+
+                <div class="stat-venta">
+                    <span>Monto de tus ventas</span>
+                    <strong data-contar th:text="'$ ' + ${#numbers.formatInteger(miMontoHoy, 1, 'POINT')}"></strong>
+                </div>
+
+            </div>
+
+            <h2 class="seccion-titulo">La tienda hoy</h2>
+
+            <div class="ventas-resumen">
+
+                <div class="stat-venta">
+                    <span>Ventas realizadas</span>
+                    <strong data-contar th:text="${tiendaVentasHoy}"></strong>
+                </div>
+
+                <div class="stat-venta">
+                    <span>Unidades vendidas</span>
+                    <strong data-contar th:text="${tiendaUnidadesHoy}"></strong>
+                </div>
+
+            </div>
+
+        </div>
+
+        <h2 class="seccion-titulo">Por agotarse</h2>
+
+        <div class="panel-lista">
+
+            <p th:if="${#lists.isEmpty(porAgotarse)}" class="ok-msg">
+                Todo el inventario tiene stock suficiente.
             </p>
+
+            <table th:unless="${#lists.isEmpty(porAgotarse)}">
+
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr th:each="p : ${porAgotarse}">
+                        <td th:text="${p.codigo}"></td>
+                        <td th:text="${p.nombre}"></td>
+                        <td>
+                            <span th:if="${p.cantidad == 0}" class="agotado-tag">Agotado</span>
+                            <span th:unless="${p.cantidad == 0}" th:text="${p.cantidad}"></span>
+                        </td>
+                    </tr>
+                </tbody>
+
+            </table>
+
+            <a th:unless="${#lists.isEmpty(porAgotarse)}"
+               href="/productos/por-agotarse"
+               class="ver-lista">
+                <span th:text="'Ver lista completa (' + ${stockBajo + agotados} + ')'"></span>
+                <i class="ti ti-arrow-right" aria-hidden="true"></i>
+            </a>
 
         </div>
 
     </div>
 
 </div>
+
+<script>
+    (function () {
+        var ahora = new Date();
+        var hora = ahora.getHours();
+
+        var saludo = hora < 12 ? 'Buenos días' : (hora < 19 ? 'Buenas tardes' : 'Buenas noches');
+        document.getElementById('saludo').textContent = saludo;
+
+        var fecha = ahora.toLocaleDateString('es-CO', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+
+        document.getElementById('fecha-hoy').textContent = fecha.charAt(0).toUpperCase() + fecha.slice(1);
+    })();
+</script>
+
+<script th:if="${esAdmin}" src="/js/chart.umd.min.js"></script>
+
+<script th:if="${esAdmin}" th:inline="javascript">
+    function fmt(n) {
+        return '$ ' + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+
+    if (typeof Chart !== 'undefined') {
+        Chart.defaults.font.family = "'Nunito Variable', Arial, sans-serif";
+        Chart.defaults.color = '#4a1020';
+    }
+
+    const canvasSemana = document.getElementById('grafica-semana');
+    const canvasTop = document.getElementById('grafica-top');
+
+    if (canvasSemana && typeof Chart !== 'undefined') {
+
+        const etiquetas = /*[[${etiquetasSemana}]]*/ [];
+        const valores = /*[[${valoresSemana}]]*/ [];
+
+        new Chart(canvasSemana, {
+            type: 'bar',
+            data: {
+                labels: etiquetas,
+                datasets: [{
+                    label: 'Ventas',
+                    data: valores,
+                    backgroundColor: '#df6794',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: function (ctx) { return fmt(ctx.parsed.y); } } }
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { callback: function (v) { return fmt(v); } } }
+                }
+            }
+        });
+    }
+
+    if (canvasTop && typeof Chart !== 'undefined') {
+
+        const nombres = /*[[${nombresTop}]]*/ [];
+        const cantidades = /*[[${cantidadesTop}]]*/ [];
+
+        new Chart(canvasTop, {
+            type: 'bar',
+            data: {
+                labels: nombres,
+                datasets: [{
+                    label: 'Unidades vendidas',
+                    data: cantidades,
+                    backgroundColor: '#c29be7',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true, ticks: { precision: 0 } }
+                }
+            }
+        });
+    }
+</script>
 
 </body>
 </html>

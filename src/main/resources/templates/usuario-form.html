@@ -7,6 +7,9 @@
     <link rel="stylesheet"
           href="/css/dashboard.css">
 
+    <link rel="stylesheet"
+          href="/css/alertas.css">
+
     <style>
 
         .form-card{
@@ -40,7 +43,7 @@
             color:#4a1020;
         }
 
-        .form-group input{
+        .form-group input, .form-group select{
 
             width:100%;
 
@@ -49,6 +52,12 @@
             border:2px solid #c29be7;
 
             border-radius:10px;
+
+            background:white;
+
+            font-family:inherit;
+
+            font-size:inherit;
         }
 
         .btn-guardar{
@@ -120,61 +129,50 @@
                        name="id"
                        th:value="${usuario.id}">
 
+                <div th:replace="~{fragments/alertas :: alertas}"></div>
+
                 <div class="form-group">
-
                     <label>Usuario</label>
-
                     <input type="text"
                            name="username"
                            th:value="${usuario.username}"
+                           maxlength="50"
                            required>
-
                 </div>
 
                 <div class="form-group">
-
                     <label>Contraseña</label>
-
-                    <input type="text"
+                    <input type="password"
                            name="password"
-                           th:value="${usuario.password}"
-                           required>
-
+                           placeholder="Dejar en blanco para no cambiar la contraseña actual">
+                    <small style="color:#666;">Si la cambias: mínimo 8 caracteres, con mayúscula, minúscula y número.</small>
                 </div>
 
                 <div class="form-group">
-
                     <label>Rol</label>
-
-                    <input type="text"
-                           name="rol"
-                           th:value="${usuario.rol}"
-                           required>
-
+                    <select name="rol" required>
+                        <option value="">-- Selecciona un rol --</option>
+                        <option value="ADMIN" th:selected="${usuario.rol != null and usuario.rol.name() == 'ADMIN'}">Administrador</option>
+                        <option value="EMPLEADO" th:selected="${usuario.rol != null and usuario.rol.name() == 'EMPLEADO'}">Empleado</option>
+                    </select>
                 </div>
 
                 <div class="form-group">
-
                     <label>Tienda</label>
-
                     <input type="text"
                            name="tienda"
-                           th:value="${usuario.tienda}">
-
+                           th:value="${usuario.tienda}"
+                           maxlength="100">
                 </div>
 
                 <button type="submit"
                         class="btn-guardar">
-
                     Guardar Usuario
-
                 </button>
 
                 <a href="/usuarios"
                    class="btn-volver">
-
                     Volver
-
                 </a>
 
             </form>
@@ -184,6 +182,8 @@
     </div>
 
 </div>
+
+<script src="/js/alertas.js"></script>
 
 </body>
 </html>

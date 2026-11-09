@@ -11,7 +11,9 @@ public class Historial {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    private String usuario;
+    @ManyToOne
+    @JoinColumn(name = "usuario_id")
+    private Usuario usuario;
 
     private String accion;
 
@@ -28,11 +30,11 @@ public class Historial {
         this.id = id;
     }
 
-    public String getUsuario() {
+    public Usuario getUsuario() {
         return usuario;
     }
 
-    public void setUsuario(String usuario) {
+    public void setUsuario(Usuario usuario) {
         this.usuario = usuario;
     }
 

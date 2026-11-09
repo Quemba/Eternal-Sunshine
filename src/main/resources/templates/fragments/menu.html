@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<body>
+
+<nav class="nav" th:fragment="menu" aria-label="Menú principal">
+
+    <link rel="stylesheet" href="/css/tabler/tabler-icons.min.css">
+    <link rel="stylesheet" href="/css/iconos.css">
+    <link rel="stylesheet" href="/css/ui.css">
+    <link rel="stylesheet" href="/css/menu.css">
+    <link rel="stylesheet" href="/css/consulta.css">
+
+    <a href="/" class="nav-link">
+        <i class="ti ti-layout-dashboard" aria-hidden="true"></i>
+        <span>Dashboard</span>
+    </a>
+
+    <div class="nav-grupo">Ventas</div>
+
+    <a href="/ventas/nueva" class="nav-link">
+        <i class="ti ti-shopping-cart" aria-hidden="true"></i>
+        <span>Nueva venta</span>
+    </a>
+
+    <a href="/ventas" class="nav-link">
+        <i class="ti ti-receipt" aria-hidden="true"></i>
+        <span th:text="${esAdmin} ? 'Historial de ventas' : 'Mis ventas'">Historial de ventas</span>
+    </a>
+
+    <div class="nav-grupo">Inventario</div>
+
+    <a href="/productos" class="nav-link">
+        <i class="ti ti-package" aria-hidden="true"></i>
+        <span>Productos</span>
+    </a>
+
+    <a href="/productos/por-agotarse" class="nav-link">
+        <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+        <span>Por agotarse</span>
+        <span class="nav-badge nav-badge-ambar"
+              data-aviso="porAgotarse"
+              th:with="n=${avisos != null} ? ${avisos.porAgotarse} : 0"
+              th:text="${n}"
+              th:classappend="${n == 0} ? 'oculto'">0</span>
+    </a>
+
+    <a href="/reabastecimiento" class="nav-link">
+        <i class="ti ti-truck-delivery" aria-hidden="true"></i>
+        <span>Reabastecimiento</span>
+        <span class="nav-badge"
+              data-aviso="reabastecimiento"
+              th:with="n=${avisos != null} ? ${avisos.reabastecimiento} : 0, u=${avisos != null} ? ${avisos.urgentes} : 0"
+              th:text="${n}"
+              th:classappend="(${n == 0} ? 'oculto ' : '') + (${u > 0} ? 'nav-badge-rojo' : 'nav-badge-ambar')">0</span>
+    </a>
+
+    <a href="/entradas/nueva" class="nav-link">
+        <i class="ti ti-package-import" aria-hidden="true"></i>
+        <span>Recibir mercancía</span>
+    </a>
+
+    <a href="/entradas" class="nav-link">
+        <i class="ti ti-list-details" aria-hidden="true"></i>
+        <span>Entradas registradas</span>
+    </a>
+
+    <a href="/conteos" class="nav-link">
+        <i class="ti ti-clipboard-list" aria-hidden="true"></i>
+        <span>Conteo de inventario</span>
+        <span class="nav-badge nav-badge-rojo"
+              data-aviso="conteos"
+              th:if="${esAdmin}"
+              th:with="n=${avisos != null} ? ${avisos.conteosPendientes} : 0"
+              th:text="${n}"
+              th:classappend="${n == 0} ? 'oculto'">0</span>
+    </a>
+
+    <div class="nav-grupo">Gestión</div>
+
+    <a href="/solicitudes" class="nav-link" th:if="${esAdmin}">
+        <i class="ti ti-clipboard-check" aria-hidden="true"></i>
+        <span>Solicitudes</span>
+        <span class="nav-badge nav-badge-rojo"
+              data-aviso="solicitudes"
+              th:with="n=${avisos != null} ? ${avisos.solicitudesPendientes} : 0"
+              th:text="${n}"
+              th:classappend="${n == 0} ? 'oculto'">0</span>
+    </a>
+
+    <a href="/solicitudes/mias" class="nav-link" th:unless="${esAdmin}">
+        <i class="ti ti-clipboard-check" aria-hidden="true"></i>
+        <span>Mis solicitudes</span>
+        <span class="nav-badge nav-badge-verde"
+              data-aviso="misSolicitudes"
+              th:with="n=${avisos != null} ? ${avisos.misSolicitudesNuevas} : 0"
+              th:text="${n}"
+              th:classappend="${n == 0} ? 'oculto'">0</span>
+    </a>
+
+    <a href="/usuarios" class="nav-link" th:if="${esAdmin}">
+        <i class="ti ti-users" aria-hidden="true"></i>
+        <span>Usuarios</span>
+    </a>
+
+    <a href="/historial" class="nav-link">
+        <i class="ti ti-history" aria-hidden="true"></i>
+        <span>Historial</span>
+    </a>
+
+    <a href="/cuenta/contrasena" class="nav-link">
+        <i class="ti ti-key" aria-hidden="true"></i>
+        <span>Cambiar contraseña</span>
+    </a>
+
+    <div class="nav-espacio"></div>
+
+    <div class="nav-usuario" th:if="${sesionUsuario != null}">
+
+        <div class="nav-avatar" th:text="${sesionUsuario.inicial}">A</div>
+
+        <div class="nav-usuario-datos">
+            <strong th:text="${sesionUsuario.nombre}">admin</strong>
+            <span th:text="${sesionUsuario.rol}">Administrador</span>
+        </div>
+
+        <form method="post" action="/logout">
+            <button type="submit" class="nav-salir-btn" title="Cerrar sesión" aria-label="Cerrar sesión">
+                <i class="ti ti-logout" aria-hidden="true"></i>
+            </button>
+        </form>
+
+    </div>
+
+    <form method="post" action="/logout" class="nav-salir" th:unless="${sesionUsuario != null}">
+        <button type="submit" class="nav-link">
+            <i class="ti ti-logout" aria-hidden="true"></i>
+            <span>Cerrar sesión</span>
+        </button>
+    </form>
+
+    <script src="/js/menu.js"></script>
+    <script src="/js/ui.js"></script>
+    <script src="/js/consulta.js"></script>
+
+</nav>
+
+</body>
+</html>

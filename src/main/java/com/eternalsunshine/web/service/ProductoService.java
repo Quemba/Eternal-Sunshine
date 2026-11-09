@@ -14,37 +14,30 @@ public class ProductoService {
     private ProductoRepository productoRepository;
 
     public List<Producto> obtenerTodos() {
+        return productoRepository.findAll();
+    }
 
-    return productoRepository.findAll();
-}
+    public List<Producto> buscar(String texto) {
+        String textoEscapado = texto
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
+        return productoRepository.buscar(textoEscapado);
+    }
 
-public List<Producto> buscar(
-        String texto) {
+    public long obtenerTotalProductos() {
+        return productoRepository.count();
+    }
 
-    return productoRepository
-            .buscar(texto);
-}
+    public long obtenerStockBajo() {
+        return productoRepository.countByCantidadBetween(1, 5);
+    }
 
-public long obtenerTotalProductos() {
+    public long obtenerAgotados() {
+        return productoRepository.countByCantidad(0);
+    }
 
-    return productoRepository.count();
-}
-
-public long obtenerStockBajo() {
-
-    return productoRepository
-            .countByCantidadLessThanEqual(5);
-}
-
-public long obtenerAgotados() {
-
-    return productoRepository
-            .countByCantidad(0);
-}
-
-public Double obtenerValorInventario() {
-
-    return productoRepository
-            .calcularValorInventario();
-}
+    public Long obtenerValorInventario() {
+        return productoRepository.calcularValorInventario();
+    }
 }

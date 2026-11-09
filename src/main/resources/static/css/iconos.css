@@ -1,0 +1,120 @@
+.action-btn i {
+    font-size: 20px;
+    line-height: 1;
+    vertical-align: middle;
+    margin-right: 6px;
+}
+
+.action-btn i.ti-chevron-down {
+    font-size: 16px;
+    margin-left: 4px;
+    margin-right: 0;
+}
+
+.search-box i.ti {
+    font-size: 22px;
+    color: #df6794;
+    margin-right: 6px;
+}
+
+.enlace-icono {
+    text-decoration: none;
+}
+
+.enlace-icono i,
+.btn-icono i {
+    font-size: 22px;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+.enlace-icono:hover i,
+.btn-icono:hover i {
+    opacity: .75;
+}
+
+.ic-editar { color: #df6794; }
+.ic-eliminar { color: #b83255; }
+.ic-aprobar { color: #2e9d57; }
+.ic-rechazar { color: #b83255; }
+.ic-anular { color: #b83255; }
+
+.exportar {
+    position: relative;
+    display: inline-block;
+}
+
+.exportar-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    min-width: 210px;
+    padding: 6px;
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(74, 16, 32, .25);
+    z-index: 60;
+}
+
+.exportar-menu[hidden] {
+    display: none;
+}
+
+.exportar-menu a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    padding: 11px 12px;
+    border-radius: 10px;
+    background: transparent;
+    box-shadow: none;
+    color: #4a1020;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.exportar-menu a:hover {
+    background: #f3e8d3;
+}
+
+.exportar-menu a i {
+    margin: 0;
+    font-size: 21px;
+    color: #df6794;
+}
+
+.tipo-conteo {
+    background: #dff3f1;
+    color: #1d6b63;
+}
+
+.ec-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.ec-curso {
+    background: #fff3cd;
+    color: #6b5400;
+}
+
+.ec-revision {
+    background: #f3e8ff;
+    color: #5b3a86;
+}
+
+.ec-revisado {
+    background: #e6f5ea;
+    color: #1f6b3a;
+}
+
+.ec-cancelado {
+    background: #eeeeee;
+    color: #777777;
+}

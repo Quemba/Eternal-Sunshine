@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<body>
+
+<nav th:fragment="nav(resultado)"
+     th:if="${resultado.totalPaginas > 1}"
+     class="paginacion"
+     aria-label="Paginación">
+
+    <a th:if="${resultado.pagina > 1}"
+       href="#"
+       class="pag-nav"
+       title="Página anterior"
+       th:attr="data-pagina=${resultado.pagina - 1}">
+        <i class="ti ti-chevron-left" aria-hidden="true"></i>
+    </a>
+
+    <th:block th:each="it : ${resultado.items}">
+
+        <span th:if="${it.puntos}" class="pag-puntos">…</span>
+
+        <span th:if="${!it.puntos and it.actual}"
+              class="pag-actual"
+              th:text="${it.numero}"></span>
+
+        <a th:if="${!it.puntos and !it.actual}"
+           href="#"
+           class="pag-link"
+           th:text="${it.numero}"
+           th:attr="data-pagina=${it.numero}"></a>
+
+    </th:block>
+
+    <a th:if="${resultado.pagina < resultado.totalPaginas}"
+       href="#"
+       class="pag-nav"
+       title="Página siguiente"
+       th:attr="data-pagina=${resultado.pagina + 1}">
+        <i class="ti ti-chevron-right" aria-hidden="true"></i>
+    </a>
+
+</nav>
+
+</body>
+</html>

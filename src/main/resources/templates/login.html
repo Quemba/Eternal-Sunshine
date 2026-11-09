@@ -2,16 +2,25 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Login - Eternal Sunshine</title>
+
+    <link rel="icon" type="image/png" href="/images/logo.png">
 
     <link rel="stylesheet"
           href="/css/login.css">
+
+    <link rel="stylesheet"
+          href="/css/tabler/tabler-icons.min.css">
+
+    <link rel="stylesheet"
+          href="/css/alertas.css">
 </head>
 <body>
 
-<div class="login-container">
+<div class="login-container" id="tarjeta-login">
 
-    <img src="/images/logo.png"
+    <img src="/images/logo-completo.png"
          alt="Logo"
          class="logo">
 
@@ -23,31 +32,69 @@
         Sistema de Gestión de Inventario
     </div>
 
+    <div id="zona-aviso">
+
+        <div th:if="${error}"
+             class="alerta alerta-error"
+             style="text-align:left;"
+             role="alert">
+
+            <span class="alerta-icono"><i class="ti ti-alert-triangle" aria-hidden="true"></i></span>
+
+            <span class="alerta-texto"
+                  th:text="${error}"></span>
+
+            <button type="button"
+                    class="alerta-cerrar"
+                    aria-label="Cerrar aviso"><i class="ti ti-x" aria-hidden="true"></i></button>
+
+        </div>
+
+    </div>
+
     <form action="/login"
-          method="post">
+          method="post"
+          id="form-login">
 
         <div class="form-group">
 
-            <label>Usuario</label>
+            <label for="usuario">Usuario</label>
 
             <input type="text"
+                   id="usuario"
                    name="username"
+                   autocomplete="username"
                    required>
 
         </div>
 
         <div class="form-group">
 
-            <label>Contraseña</label>
+            <label for="clave">Contraseña</label>
 
-            <input type="password"
-                   name="password"
-                   required>
+            <div class="campo-clave">
+
+                <input type="password"
+                       id="clave"
+                       name="password"
+                       autocomplete="current-password"
+                       required>
+
+                <button type="button"
+                        class="btn-ojo"
+                        id="ver-clave"
+                        aria-label="Mostrar contraseña"
+                        title="Mostrar contraseña">
+                    <i class="ti ti-eye" aria-hidden="true"></i>
+                </button>
+
+            </div>
 
         </div>
 
         <button type="submit"
-                class="btn-login">
+                class="btn-login"
+                id="btn-ingresar">
 
             Ingresar
 
@@ -55,12 +102,210 @@
 
     </form>
 
-    <p class="error"
-       th:if="${error}"
-       th:text="${error}">
-    </p>
+</div>
+
+<div class="pantalla-entrada" id="pantalla-entrada" aria-hidden="true">
+
+    <div class="pantalla-entrada-contenido">
+
+        <div class="logo-marco">
+            <img src="/images/logo.png"
+                 alt=""
+                 class="logo-giro">
+        </div>
+
+        <span class="solo-lector" role="status">Iniciando sesión</span>
+
+    </div>
 
 </div>
+
+<script src="/js/alertas.js"></script>
+
+<script>
+    (function () {
+        var MOSTRAR_SI_TARDA_MS = 350;
+        var MANTENER_EXITO_MS = 1700;
+        var MANTENER_ERROR_MS = 600;
+        var SALIDA_MS = 380;
+
+        var formulario = document.getElementById('form-login');
+        var boton = document.getElementById('btn-ingresar');
+        var clave = document.getElementById('clave');
+        var ojo = document.getElementById('ver-clave');
+        var pantalla = document.getElementById('pantalla-entrada');
+        var tarjeta = document.getElementById('tarjeta-login');
+        var zonaAviso = document.getElementById('zona-aviso');
+
+        var enviando = false;
+        var mostradaEn = 0;
+
+        function esperar(ms) {
+            return new Promise(function (resolver) {
+                setTimeout(resolver, ms);
+            });
+        }
+
+        ojo.addEventListener('click', function () {
+            var visible = clave.type === 'text';
+
+            clave.type = visible ? 'password' : 'text';
+            ojo.setAttribute('aria-label', visible ? 'Mostrar contraseña' : 'Ocultar contraseña');
+            ojo.title = visible ? 'Mostrar contraseña' : 'Ocultar contraseña';
+            ojo.innerHTML = visible
+                ? '<i class="ti ti-eye" aria-hidden="true"></i>'
+                : '<i class="ti ti-eye-off" aria-hidden="true"></i>';
+
+            clave.focus();
+        });
+
+        function mostrarPantalla() {
+            if (mostradaEn) return;
+
+            mostradaEn = Date.now();
+            pantalla.classList.remove('saliendo');
+            pantalla.classList.add('visible');
+            pantalla.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('entrando');
+        }
+
+        function ocultarPantalla() {
+            mostradaEn = 0;
+            pantalla.classList.remove('visible');
+            pantalla.classList.remove('saliendo');
+            pantalla.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('entrando');
+        }
+
+        function restablecerBoton() {
+            boton.disabled = false;
+            boton.textContent = 'Ingresar';
+            enviando = false;
+        }
+
+        function mostrarError(texto) {
+            zonaAviso.innerHTML = '';
+
+            var caja = document.createElement('div');
+            caja.className = 'alerta alerta-error';
+            caja.style.textAlign = 'left';
+            caja.setAttribute('role', 'alert');
+
+            var icono = document.createElement('span');
+            icono.className = 'alerta-icono';
+            icono.innerHTML = '<i class="ti ti-alert-triangle" aria-hidden="true"></i>';
+
+            var mensaje = document.createElement('span');
+            mensaje.className = 'alerta-texto';
+            mensaje.textContent = texto;
+
+            var cerrar = document.createElement('button');
+            cerrar.type = 'button';
+            cerrar.className = 'alerta-cerrar';
+            cerrar.setAttribute('aria-label', 'Cerrar aviso');
+            cerrar.innerHTML = '<i class="ti ti-x" aria-hidden="true"></i>';
+            cerrar.addEventListener('click', function () {
+                caja.remove();
+            });
+
+            caja.appendChild(icono);
+            caja.appendChild(mensaje);
+            caja.appendChild(cerrar);
+            zonaAviso.appendChild(caja);
+        }
+
+        function sacudirTarjeta() {
+            tarjeta.classList.remove('sacudir');
+            void tarjeta.offsetWidth;
+            tarjeta.classList.add('sacudir');
+        }
+
+        formulario.addEventListener('submit', async function (evento) {
+            evento.preventDefault();
+
+            if (enviando) return;
+
+            enviando = true;
+            boton.disabled = true;
+            boton.innerHTML = '<i class="ti ti-loader-2 girar" aria-hidden="true"></i> Ingresando...';
+
+            var temporizador = setTimeout(mostrarPantalla, MOSTRAR_SI_TARDA_MS);
+
+            var exito = false;
+            var fallo = false;
+            var mensaje = 'Usuario o contraseña incorrectos';
+
+            try {
+                var respuesta = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams(new FormData(formulario)).toString(),
+                    redirect: 'manual',
+                    credentials: 'same-origin'
+                });
+
+                if (respuesta.type === 'opaqueredirect') {
+                    exito = true;
+
+                } else if (respuesta.ok) {
+                    var html = await respuesta.text();
+                    var documento = new DOMParser().parseFromString(html, 'text/html');
+                    var texto = documento.querySelector('.alerta-texto');
+
+                    if (texto && texto.textContent.trim() !== '') {
+                        mensaje = texto.textContent.trim();
+                    }
+
+                } else {
+                    fallo = true;
+                }
+
+            } catch (e) {
+                fallo = true;
+            }
+
+            clearTimeout(temporizador);
+
+            if (fallo) {
+                formulario.submit();
+                return;
+            }
+
+            if (exito) {
+                mostrarPantalla();
+
+                var restante = MANTENER_EXITO_MS - (Date.now() - mostradaEn);
+                await esperar(Math.max(0, restante));
+
+                pantalla.classList.add('saliendo');
+                await esperar(SALIDA_MS);
+
+                window.location.href = '/';
+                return;
+            }
+
+            if (mostradaEn) {
+                var faltante = MANTENER_ERROR_MS - (Date.now() - mostradaEn);
+                await esperar(Math.max(0, faltante));
+                ocultarPantalla();
+            }
+
+            mostrarError(mensaje);
+            sacudirTarjeta();
+
+            clave.value = '';
+            restablecerBoton();
+            clave.focus();
+        });
+
+        window.addEventListener('pageshow', function (evento) {
+            if (evento.persisted) {
+                ocultarPantalla();
+                restablecerBoton();
+            }
+        });
+    })();
+</script>
 
 </body>
 </html>

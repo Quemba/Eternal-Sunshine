@@ -6,6 +6,51 @@
 
     <link rel="stylesheet"
           href="/css/dashboard.css">
+
+    <style>
+        .filtros { display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end; margin-bottom:20px; }
+        .filtro { display:flex; flex-direction:column; gap:6px; min-width:150px; }
+        .filtro-texto { flex:1; min-width:240px; }
+        .filtro label { font-size:13px; font-weight:bold; color:#4a1020; }
+        .filtro select, .filtro input[type="date"], .filtro input[type="text"] {
+            padding:10px 12px; border:2px solid #c29be7; border-radius:10px; font-family:inherit; font-size:14px; background:white; box-sizing:border-box; width:100%;
+        }
+        .entrada-icono { position:relative; }
+        .entrada-icono i { position:absolute; left:12px; top:50%; transform:translateY(-50%); font-size:18px; color:#df6794; }
+        .entrada-icono input { padding-left:38px !important; }
+
+        .filtro-botones { flex-direction:row; align-items:center; gap:10px; min-width:0; }
+        .btn-limpiar { background:none; border:none; padding:0; color:#9b6bb8; font-weight:bold; font-family:inherit; font-size:14px; cursor:pointer; }
+        .btn-limpiar:hover { text-decoration:underline; }
+        .btn-limpiar[hidden] { display:none; }
+
+        .resumen { color:#4a1020; margin:0 0 14px; }
+
+        .tipo { display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:12px; font-size:13px; font-weight:bold; white-space:nowrap; }
+        .tipo i { font-size:16px; }
+        .tipo-venta { background:#e6f5ea; color:#1f6b3a; }
+        .tipo-entrada { background:#f3e8ff; color:#5b3a86; }
+        .tipo-stock { background:#fff3cd; color:#6b5400; }
+        .tipo-producto { background:#fde8ee; color:#8a1f3d; }
+        .tipo-usuario { background:#f3e8d3; color:#4a1020; }
+        .tipo-solicitud { background:#ffe9d6; color:#8a4b12; }
+        .tipo-otro { background:#eee; color:#555; }
+
+        .vacio { text-align:center; color:#888; padding:30px; }
+        .vacio a { color:#df6794; font-weight:bold; text-decoration:none; }
+
+        .paginacion { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; align-items:center; margin-top:22px; }
+        .paginacion a, .paginacion span { min-width:38px; height:38px; padding:0 10px; box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; border-radius:10px; font-weight:bold; font-size:14px; text-decoration:none; }
+        .pag-link { background:#f3e8d3; color:#4a1020; }
+        .pag-link:hover { background:#e9d9ba; }
+        .pag-actual { background:#df6794; color:white; }
+        .pag-puntos { color:#9b6b78; }
+        .pag-nav { background:#c29be7; color:white; }
+        .pag-nav i { font-size:18px; }
+
+        #resultados-historial { transition:opacity .15s; }
+        #resultados-historial.cargando { opacity:.55; }
+    </style>
 </head>
 <body>
 
@@ -22,19 +67,7 @@
 
         </div>
 
-        <div class="menu">
-
-            <a href="/">Dashboard</a>
-
-            <a href="/productos">Productos</a>
-
-            <a href="/usuarios">Usuarios</a>
-
-            <a href="/historial">Historial</a>
-
-            <a href="/login">Cerrar Sesión</a>
-
-        </div>
+        <div th:replace="~{fragments/menu :: menu}"></div>
 
     </div>
 
@@ -48,57 +81,316 @@
 
         <div class="tabla">
 
-            <h3>Acciones Registradas</h3>
+            <form method="get" action="/historial" class="filtros" id="form-filtros" role="search">
 
-            <table style="width:100%; border-collapse: collapse;">
+                <div class="filtro filtro-texto">
+                    <label for="f-q">Buscar</label>
+                    <div class="entrada-icono">
+                        <i class="ti ti-search" aria-hidden="true"></i>
+                        <input type="text" id="f-q" name="q" th:value="${q}"
+                               autocomplete="off"
+                               placeholder="Producto, usuario, número de venta...">
+                    </div>
+                </div>
 
-                <thead>
+                <div class="filtro">
+                    <label for="f-usuario">Usuario</label>
+                    <select id="f-usuario" name="usuario">
+                        <option value="">Todos</option>
+                        <option th:each="u : ${usuarios}"
+                                th:value="${u.id}"
+                                th:text="${u.username}"
+                                th:selected="${usuarioId != null and usuarioId == u.id}"></option>
+                    </select>
+                </div>
 
-                <tr style="background:#df6794; color:white;">
+                <div class="filtro">
+                    <label for="f-tipo">Tipo</label>
+                    <select id="f-tipo" name="tipo">
+                        <option value="">Todos</option>
+                        <option th:each="t : ${tipos}"
+                                th:value="${t.clave}"
+                                th:text="${t.etiqueta}"
+                                th:selected="${tipo == t.clave}"></option>
+                    </select>
+                </div>
 
-                    <th style="padding:10px;">ID</th>
+                <div class="filtro">
+                    <label for="f-desde">Desde</label>
+                    <input type="date" id="f-desde" name="desde" th:value="${desde}">
+                </div>
 
-                    <th style="padding:10px;">Usuario</th>
+                <div class="filtro">
+                    <label for="f-hasta">Hasta</label>
+                    <input type="date" id="f-hasta" name="hasta" th:value="${hasta}">
+                </div>
 
-                    <th style="padding:10px;">Acción</th>
+                <div class="filtro filtro-botones">
+                    <button type="button" class="btn-limpiar" id="btn-limpiar" hidden>Limpiar</button>
+                </div>
 
-                    <th style="padding:10px;">Fecha</th>
+            </form>
 
-                </tr>
+            <div id="resultados-historial" aria-live="polite">
 
-                </thead>
+                <p class="resumen" th:if="${resultado.total > 0}">
+                    Mostrando
+                    <strong th:text="${resultado.desdeRegistro}"></strong>–<strong th:text="${resultado.hastaRegistro}"></strong>
+                    de <strong th:text="${resultado.total}"></strong> movimientos
+                </p>
 
-                <tbody>
+                <p class="vacio" th:if="${resultado.total == 0}">
+                    <span th:if="${hayFiltros}">No hay movimientos con esos filtros. <a href="/historial">Limpiar filtros</a></span>
+                    <span th:unless="${hayFiltros}">Todavía no hay movimientos registrados.</span>
+                </p>
 
-                <tr th:each="h : ${historial}">
+                <table th:if="${resultado.total > 0}" style="width:100%; border-collapse: collapse;">
 
-                    <td style="padding:10px;"
-                        th:text="${h.id}">
-                    </td>
+                    <thead>
 
-                    <td style="padding:10px;"
-                        th:text="${h.usuario}">
-                    </td>
+                    <tr style="background:#df6794; color:white;">
 
-                    <td style="padding:10px;"
-                        th:text="${h.accion}">
-                    </td>
+                        <th style="padding:10px; text-align:left;">Fecha</th>
 
-                    <td style="padding:10px;"
-                      th:text="${#temporals.format(h.fecha, 'dd/MM/yyyy HH:mm')}">
-                    </td>
+                        <th style="padding:10px; text-align:left;">Usuario</th>
 
-                </tr>
+                        <th style="padding:10px; text-align:left;">Tipo</th>
 
-                </tbody>
+                        <th style="padding:10px; text-align:left;">Acción</th>
 
-            </table>
+                    </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                    <tr th:each="f : ${resultado.filas}">
+
+                        <td style="padding:10px; border-bottom:1px solid #eee; white-space:nowrap;"
+                            th:text="${#temporals.format(f.fecha, 'dd/MM/yyyy HH:mm')}">
+                        </td>
+
+                        <td style="padding:10px; border-bottom:1px solid #eee;"
+                            th:text="${f.usuario}">
+                        </td>
+
+                        <td style="padding:10px; border-bottom:1px solid #eee;">
+                            <span class="tipo" th:classappend="'tipo-' + ${f.tipoClave}">
+                                <i class="ti" th:classappend="${f.tipoIcono}" aria-hidden="true"></i>
+                                <span th:text="${f.tipoEtiqueta}"></span>
+                            </span>
+                        </td>
+
+                        <td style="padding:10px; border-bottom:1px solid #eee;"
+                            th:text="${f.accion}">
+                        </td>
+
+                    </tr>
+
+                    </tbody>
+
+                </table>
+
+                <nav class="paginacion" th:if="${resultado.totalPaginas > 1}" aria-label="Paginación del historial">
+
+                    <a th:if="${resultado.pagina > 1}"
+                       class="pag-nav"
+                       title="Página anterior"
+                       th:href="@{/historial(pagina=${resultado.pagina - 1}, q=${q}, usuario=${usuarioTexto}, tipo=${tipo}, desde=${desde}, hasta=${hasta})}">
+                        <i class="ti ti-chevron-left" aria-hidden="true"></i>
+                    </a>
+
+                    <th:block th:each="it : ${resultado.items}">
+
+                        <span th:if="${it.puntos}" class="pag-puntos">…</span>
+
+                        <span th:if="${!it.puntos and it.actual}"
+                              class="pag-actual"
+                              th:text="${it.numero}"></span>
+
+                        <a th:if="${!it.puntos and !it.actual}"
+                           class="pag-link"
+                           th:text="${it.numero}"
+                           th:href="@{/historial(pagina=${it.numero}, q=${q}, usuario=${usuarioTexto}, tipo=${tipo}, desde=${desde}, hasta=${hasta})}"></a>
+
+                    </th:block>
+
+                    <a th:if="${resultado.pagina < resultado.totalPaginas}"
+                       class="pag-nav"
+                       title="Página siguiente"
+                       th:href="@{/historial(pagina=${resultado.pagina + 1}, q=${q}, usuario=${usuarioTexto}, tipo=${tipo}, desde=${desde}, hasta=${hasta})}">
+                        <i class="ti ti-chevron-right" aria-hidden="true"></i>
+                    </a>
+
+                </nav>
+
+            </div>
 
         </div>
 
     </div>
 
 </div>
+
+<script>
+    (function () {
+        var formulario = document.getElementById('form-filtros');
+        var zona = document.getElementById('resultados-historial');
+        var limpiar = document.getElementById('btn-limpiar');
+        var campoTexto = document.getElementById('f-q');
+
+        if (!formulario || !zona || !limpiar || !campoTexto) return;
+
+        var campos = formulario.querySelectorAll('input, select');
+
+        var temporizador = null;
+        var contador = 0;
+        var controlador = null;
+
+        function hayFiltros() {
+            var alguno = false;
+
+            campos.forEach(function (campo) {
+                if (campo.value.trim() !== '') {
+                    alguno = true;
+                }
+            });
+
+            return alguno;
+        }
+
+        function actualizarLimpiar() {
+            limpiar.hidden = !hayFiltros();
+        }
+
+        function construirUrl() {
+            var parametros = new URLSearchParams();
+
+            new FormData(formulario).forEach(function (valor, nombre) {
+                var texto = String(valor).trim();
+
+                if (texto !== '') {
+                    parametros.append(nombre, texto);
+                }
+            });
+
+            var consulta = parametros.toString();
+            return '/historial' + (consulta !== '' ? '?' + consulta : '');
+        }
+
+        async function cargar(url, desplazar) {
+            var numero = ++contador;
+
+            if (controlador) {
+                controlador.abort();
+            }
+
+            controlador = new AbortController();
+            zona.classList.add('cargando');
+
+            try {
+                var respuesta = await fetch(url, {
+                    headers: { 'Accept': 'text/html' },
+                    credentials: 'same-origin',
+                    signal: controlador.signal
+                });
+
+                if (!respuesta.ok) {
+                    throw new Error('Estado ' + respuesta.status);
+                }
+
+                var html = await respuesta.text();
+
+                if (numero !== contador) {
+                    return;
+                }
+
+                var documento = new DOMParser().parseFromString(html, 'text/html');
+                var nueva = documento.getElementById('resultados-historial');
+
+                if (!nueva) {
+                    window.location.href = url;
+                    return;
+                }
+
+                zona.innerHTML = nueva.innerHTML;
+                history.replaceState(null, '', url);
+
+                if (desplazar) {
+                    zona.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+
+            } catch (e) {
+                if (e.name === 'AbortError') {
+                    return;
+                }
+
+                window.location.href = url;
+
+            } finally {
+                if (numero === contador) {
+                    zona.classList.remove('cargando');
+                }
+            }
+        }
+
+        function limpiarTodo() {
+            campos.forEach(function (campo) {
+                campo.value = '';
+            });
+
+            actualizarLimpiar();
+            clearTimeout(temporizador);
+            cargar('/historial', false);
+        }
+
+        campoTexto.addEventListener('input', function () {
+            actualizarLimpiar();
+            clearTimeout(temporizador);
+            temporizador = setTimeout(function () {
+                cargar(construirUrl(), false);
+            }, 250);
+        });
+
+        formulario.querySelectorAll('select, input[type="date"]').forEach(function (campo) {
+            campo.addEventListener('change', function () {
+                actualizarLimpiar();
+                clearTimeout(temporizador);
+                cargar(construirUrl(), false);
+            });
+        });
+
+        formulario.addEventListener('submit', function (e) {
+            e.preventDefault();
+            clearTimeout(temporizador);
+            cargar(construirUrl(), false);
+        });
+
+        limpiar.addEventListener('click', function () {
+            limpiarTodo();
+            campoTexto.focus();
+        });
+
+        zona.addEventListener('click', function (e) {
+            var enlace = e.target.closest ? e.target.closest('a') : null;
+
+            if (!enlace) return;
+
+            if (enlace.closest('.paginacion')) {
+                e.preventDefault();
+                cargar(enlace.getAttribute('href'), true);
+                return;
+            }
+
+            if (enlace.getAttribute('href') === '/historial') {
+                e.preventDefault();
+                limpiarTodo();
+            }
+        });
+
+        actualizarLimpiar();
+    })();
+</script>
 
 </body>
 </html>
