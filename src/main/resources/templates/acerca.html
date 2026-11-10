@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Acerca de - Eternal Sunshine</title>
+
+    <link rel="stylesheet" href="/css/dashboard.css">
+
+    <style>
+        .acerca-fila { display:flex; flex-wrap:wrap; gap:20px; align-items:stretch; }
+        .acerca-fila .tarjeta-acerca { flex:1 1 560px; max-width:760px; box-sizing:border-box; }
+
+        /* Escena animada (el hueco a la derecha de la tarjeta) */
+        .escena-acerca { position:relative; flex:1 1 300px; min-height:380px; overflow:hidden; border-radius:20px;
+            background:linear-gradient(to top, #ffe2b0 0%, #f7a8c0 45%, #c79ae0 100%);
+            box-shadow:0 4px 12px rgba(0,0,0,.15); }
+        .escena-acerca img { display:block; height:auto; }
+        .escena-acerca .ea-sol { position:absolute; left:6%; top:3%; width:22%; max-width:130px; }
+        .escena-acerca .ea-sol::before { content:""; position:absolute; inset:-40%; border-radius:50%;
+            background:radial-gradient(circle, rgba(255,226,140,.8) 0 30%, rgba(255,226,140,0) 68%); }
+        .escena-acerca .ea-sol img { position:relative; width:100%; animation:ea-girar 40s linear infinite; }
+        .escena-acerca .ea-destellos, .escena-acerca .ea-corazones { position:absolute; inset:0; pointer-events:none; }
+        .escena-acerca .ea-destello { position:absolute; opacity:0; filter:drop-shadow(0 0 4px rgba(255,255,255,.95));
+            animation:ea-titilar var(--dur, 2.4s) ease-in-out var(--ret, 0s) infinite; }
+        .escena-acerca .ea-corazon { position:absolute; bottom:4%; opacity:0; line-height:0;
+            animation:ea-subir var(--dur, 9s) linear var(--ret, 0s) infinite; }
+        .escena-acerca .ea-corazon img { width:var(--tam, 26px); animation:ea-ondular var(--ond, 2.2s) ease-in-out infinite alternate; }
+        .escena-acerca .ea-banca { position:absolute; bottom:0; left:50%; width:23%; }
+        .escena-acerca .ea-palmera { position:absolute; bottom:0; right:4%; width:26%; transform-origin:50% 100%;
+            animation:ea-mecer 5s ease-in-out infinite alternate; }
+
+        @keyframes ea-girar { to { transform:rotate(360deg); } }
+        @keyframes ea-mecer { from { transform:rotate(-2.5deg); } to { transform:rotate(2.5deg); } }
+        @keyframes ea-titilar {
+            0%, 100% { opacity:0; transform:scale(.4) rotate(0deg); }
+            50% { opacity:1; transform:scale(1) rotate(20deg); }
+        }
+        @keyframes ea-subir {
+            0% { bottom:4%; opacity:0; }
+            10% { opacity:1; }
+            75% { opacity:1; }
+            100% { bottom:92%; opacity:0; }
+        }
+        @keyframes ea-ondular {
+            from { transform:translateX(calc(var(--amp, 14px) * -1)) rotate(-14deg); }
+            to { transform:translateX(var(--amp, 14px)) rotate(14deg); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .escena-acerca .ea-sol img, .escena-acerca .ea-palmera, .escena-acerca .ea-corazon, .escena-acerca .ea-corazon img { animation:none !important; }
+            .escena-acerca .ea-destello { animation:none !important; opacity:.9; }
+            .escena-acerca .ea-corazon { opacity:1; bottom:auto; }
+        }
+
+        .tarjeta-acerca { max-width:760px; padding:30px 32px; border-radius:20px; background:#ffffff; box-shadow:0 4px 12px rgba(0,0,0,.15); color:#4a1020; line-height:1.65; }
+        .tarjeta-acerca .empresa { margin:0 0 4px; font-size:13px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:#df6794; }
+        .tarjeta-acerca h2 { margin:0 0 14px; font-size:26px; color:#4a1020; }
+        .tarjeta-acerca p { margin:0 0 14px; font-size:16px; }
+
+        .eslogan { margin:26px 0 6px; padding:20px 22px; border-radius:16px; background:#fdf6f8; text-align:center; }
+        .eslogan strong { display:block; font-size:24px; color:#4a1020; }
+        .eslogan span { display:block; margin-top:6px; font-size:13px; color:#8a6a73; }
+
+        .verso { margin:18px 0 4px; padding:0 0 0 18px; border-left:4px solid #c29be7; color:#6d3a4a; font-style:italic; }
+        .verso p { margin:0 0 4px; font-size:15px; }
+        .verso-fuente { display:block; margin-top:6px; font-size:13px; font-style:normal; color:#8a6a73; }
+
+        .creditos { margin:26px 0 0; padding-top:18px; border-top:1px solid #f0dde4; font-size:14px; color:#8a6a73; }
+        .creditos strong { color:#4a1020; }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+
+    <div class="sidebar">
+
+        <div class="logo-container">
+            <img src="/images/logo.png" class="logo">
+            <h2>Eternal Sunshine</h2>
+        </div>
+
+        <div th:replace="~{fragments/menu :: menu}"></div>
+
+    </div>
+
+    <div class="content">
+
+        <div class="header">
+            <h1>Acerca de</h1>
+        </div>
+
+        <div class="tabla">
+
+            <div class="acerca-fila">
+
+            <div class="tarjeta-acerca">
+
+                <p class="empresa">Lacuna Inc. &mdash; Departamento de Inventarios</p>
+
+                <h2>Eternal Sunshine</h2>
+
+                <p>
+                    Es un sistema de control de inventario desde la nube para tiendas de barrio y pequeños negocios.
+                    Lo que se olvida en un inventario también se pierde: lo que entró y no se anotó, lo que se vendió
+                    y no se descontó. Aquí cada movimiento queda registrado, para que lo único que se olvide sea lo
+                    que ya no importa.
+                </p>
+
+                <div class="eslogan">
+                    <strong>Bienaventurados los olvidadizos</strong>
+                    <span>Friedrich Nietzsche, <em>Más allá del bien y del mal</em></span>
+                </div>
+
+                <div class="verso">
+                    <p>¡Eterno resplandor de la mente sin mancha!</p>
+                    <p>Cada plegaria aceptada y cada deseo resignado.</p>
+                    <span class="verso-fuente">Alexander Pope, <em>Eloísa a Abelardo</em> (1717)</span>
+                </div>
+
+                <p class="creditos">
+                    Desarrollado por <strong>Sergio Alejandro Quemba Moreno</strong><br>
+                    Ingeniería de Sistemas &middot; Universidad Central, Bogotá<br>
+                    Práctica de Ingeniería V &middot; 2026
+                </p>
+
+            </div>
+
+            <div class="escena-acerca" aria-hidden="true">
+
+                <div class="ea-destellos" id="ea-destellos"></div>
+
+                <div class="ea-sol"><img src="/images/anim-sol.png" alt=""></div>
+
+                <div class="ea-corazones" id="ea-corazones"></div>
+
+                <img class="ea-banca" src="/images/anim-banca.png" alt="">
+
+                <img class="ea-palmera" src="/images/anim-palmera.png" alt="">
+
+            </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    (function () {
+        function azar(minimo, maximo) {
+            return minimo + Math.random() * (maximo - minimo);
+        }
+
+        var destellos = document.getElementById('ea-destellos');
+        var corazones = document.getElementById('ea-corazones');
+
+        if (!destellos || !corazones) return;
+
+        for (var i = 0; i < 14; i++) {
+            var d = document.createElement('img');
+
+            d.src = '/images/anim-destello.png';
+            d.alt = '';
+            d.className = 'ea-destello';
+            d.style.left = azar(4, 92) + '%';
+            d.style.top = azar(3, 78) + '%';
+            d.style.width = azar(12, 26).toFixed(0) + 'px';
+            d.style.setProperty('--dur', azar(1.8, 3.6).toFixed(2) + 's');
+            d.style.setProperty('--ret', azar(0, 3.5).toFixed(2) + 's');
+            destellos.appendChild(d);
+        }
+
+        for (var j = 0; j < 8; j++) {
+            var c = document.createElement('div');
+            var corazon = document.createElement('img');
+
+            corazon.src = '/images/anim-corazon.png';
+            corazon.alt = '';
+            c.className = 'ea-corazon';
+            c.style.left = azar(8, 84) + '%';
+            c.style.setProperty('--dur', azar(7, 12).toFixed(2) + 's');
+            c.style.setProperty('--ret', azar(0, 8).toFixed(2) + 's');
+            corazon.style.setProperty('--tam', azar(20, 36).toFixed(0) + 'px');
+            corazon.style.setProperty('--amp', azar(8, 20).toFixed(0) + 'px');
+            corazon.style.setProperty('--ond', azar(1.4, 3).toFixed(2) + 's');
+
+            c.appendChild(corazon);
+            corazones.appendChild(c);
+        }
+    })();
+</script>
+
+</body>
+</html>

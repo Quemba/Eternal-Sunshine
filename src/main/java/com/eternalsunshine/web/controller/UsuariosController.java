@@ -41,7 +41,7 @@ public class UsuariosController {
             return "redirect:/";
         }
 
-        List<Usuario> usuarios = new ArrayList<>(usuarioService.obtenerUsuarios());
+        List<Usuario> usuarios = new ArrayList<>(usuarioService.obtenerUsuarios(sesion(session).getTiendaId()));
 
         usuarios.sort(Comparator.comparing((Usuario u) ->
                 u.getUsername() == null ? "" : u.getUsername().toLowerCase(Locale.ROOT)));
@@ -59,7 +59,6 @@ public class UsuariosController {
             @RequestParam(defaultValue = "") String username,
             @RequestParam(defaultValue = "") String password,
             @RequestParam(defaultValue = "") String rol,
-            @RequestParam(defaultValue = "") String tienda,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
 
@@ -68,7 +67,7 @@ public class UsuariosController {
         }
 
         try {
-            Usuario creado = usuarioService.crear(username, password, rol, tienda, sesion(session));
+            Usuario creado = usuarioService.crear(username, password, rol, sesion(session));
 
             redirectAttributes.addFlashAttribute("mensaje",
                     "Usuario «" + creado.getUsername() + "» creado como "
@@ -78,13 +77,11 @@ public class UsuariosController {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             redirectAttributes.addFlashAttribute("formUsername", username);
             redirectAttributes.addFlashAttribute("formRol", rol);
-            redirectAttributes.addFlashAttribute("formTienda", tienda);
 
         } catch (DataIntegrityViolationException e) {
             redirectAttributes.addFlashAttribute("error", "Ya existe un usuario con ese nombre.");
             redirectAttributes.addFlashAttribute("formUsername", username);
             redirectAttributes.addFlashAttribute("formRol", rol);
-            redirectAttributes.addFlashAttribute("formTienda", tienda);
         }
 
         return "redirect:/usuarios";

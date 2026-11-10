@@ -4,6 +4,7 @@ import com.eternalsunshine.web.entity.Rol;
 import com.eternalsunshine.web.entity.Usuario;
 import com.eternalsunshine.web.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +14,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -119,15 +121,15 @@ public class UsuarioService {
 
         boolean coincide = passwordEncoder.matches(clave, usuario.getPassword());
 
-        return (coincide && usuario.estaActivo()) ? usuario : null;
+        return (coincide && usuario.estaActivo() && usuario.getTiendaId() != null) ? usuario : null;
     }
 
     public Usuario buscarPorUsername(String username) {
         return usuarioRepository.findByUsernameIgnoreCase(username);
     }
 
-    public List<Usuario> obtenerUsuarios() {
-        return usuarioRepository.findAll();
+    public List<Usuario> obtenerUsuarios(Integer tiendaId) {
+        return usuarioRepository.findByTiendaId(tiendaId, Sort.by("username"));
     }
 
     private String limpiarNombre(String texto) {
@@ -198,7 +200,7 @@ public class UsuarioService {
 
         Usuario objetivo = id == null ? null : usuarioRepository.findById(id).orElse(null);
 
-        if (objetivo == null) {
+        if (objetivo == null || !Objects.equals(objetivo.getTiendaId(), admin.getTiendaId())) {
             throw new IllegalArgumentException("Ese usuario ya no existe.");
         }
 
@@ -209,9 +211,9 @@ public class UsuarioService {
         return objetivo;
     }
 
-    private void exigirAlMenosUnAdminActivo() {
+    private void exigirAlMenosUnAdminActivo(Integer tiendaId) {
 
-        for (Usuario usuario : usuarioRepository.findAll()) {
+        for (Usuario usuario : usuarioRepository.findByTiendaId(tiendaId)) {
             if (Rol.ADMIN.equals(usuario.getRol()) && usuario.estaActivo()) {
                 return;
             }
@@ -221,19 +223,13 @@ public class UsuarioService {
     }
 
     @Transactional
-    public Usuario crear(String username, String password, String rolTexto, String tienda, Usuario sesionAdmin) {
+    public Usuario crear(String username, String password, String rolTexto, Usuario sesionAdmin) {
 
         Usuario admin = exigirAdmin(sesionAdmin);
 
         String nombre = limpiarNombre(username);
         Rol rol = parsearRol(rolTexto);
         String clave = validarPassword(password, nombre);
-
-        String tiendaLimpia = tienda == null ? "" : tienda.trim().replaceAll("\\s+", " ");
-
-        if (tiendaLimpia.length() > 100) {
-            throw new IllegalArgumentException("La tienda no puede superar 100 caracteres.");
-        }
 
         if (usuarioRepository.findByUsernameIgnoreCase(nombre) != null) {
             throw new IllegalArgumentException("Ya existe un usuario con ese nombre.");
@@ -243,7 +239,7 @@ public class UsuarioService {
         nuevo.setUsername(nombre);
         nuevo.setPassword(passwordEncoder.encode(clave));
         nuevo.setRol(rol);
-        nuevo.setTienda(tiendaLimpia.isEmpty() ? null : tiendaLimpia);
+        nuevo.setTiendaId(admin.getTiendaId());
         nuevo.setActivo(true);
 
         usuarioRepository.save(nuevo);
@@ -255,19 +251,24 @@ public class UsuarioService {
     }
 
     @Transactional
-    public Usuario crearAdminInicial(String username, String password) {
+    public Usuario crearAdminDeTienda(String username, String password, Integer tiendaId) {
 
-        if (usuarioRepository.count() > 0) {
-            throw new IllegalArgumentException("Ya existen usuarios.");
+        if (tiendaId == null) {
+            throw new IllegalArgumentException("Falta la tienda del administrador.");
         }
 
         String nombre = limpiarNombre(username);
         String clave = validarPassword(password, nombre);
 
+        if (usuarioRepository.findByUsernameIgnoreCase(nombre) != null) {
+            throw new IllegalArgumentException("Ese nombre de usuario ya está en uso. Elige otro.");
+        }
+
         Usuario admin = new Usuario();
         admin.setUsername(nombre);
         admin.setPassword(passwordEncoder.encode(clave));
         admin.setRol(Rol.ADMIN);
+        admin.setTiendaId(tiendaId);
         admin.setActivo(true);
 
         return usuarioRepository.save(admin);
@@ -289,7 +290,7 @@ public class UsuarioService {
         objetivo.setRol(nuevo);
         usuarioRepository.save(objetivo);
 
-        exigirAlMenosUnAdminActivo();
+        exigirAlMenosUnAdminActivo(admin.getTiendaId());
 
         historialService.registrar(admin,
                 recortar("EDITÓ USUARIO: " + objetivo.getUsername() + " — rol "
@@ -326,7 +327,7 @@ public class UsuarioService {
         objetivo.setActivo(activo);
         usuarioRepository.save(objetivo);
 
-        exigirAlMenosUnAdminActivo();
+        exigirAlMenosUnAdminActivo(admin.getTiendaId());
 
         historialService.registrar(admin,
                 recortar("EDITÓ USUARIO: " + objetivo.getUsername() + " — "

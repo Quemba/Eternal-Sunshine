@@ -10,8 +10,8 @@ import jakarta.persistence.UniqueConstraint;
 
 @Entity
 @Table(name = "aprendizaje_categoria",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"palabra", "categoria"}))
-public class AprendizajeCategoria {
+        uniqueConstraints = @UniqueConstraint(columnNames = {"tienda_id", "palabra", "categoria"}))
+public class AprendizajeCategoria extends EntidadDeTienda {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -21,12 +21,16 @@ public class AvisosInterceptor implements HandlerInterceptor {
         private final String nombre;
         private final String rol;
         private final String inicial;
+        private final String tienda;
 
-        public SesionVista(String nombre, String rol, String inicial) {
+        public SesionVista(String nombre, String rol, String inicial, String tienda) {
             this.nombre = nombre;
             this.rol = rol;
             this.inicial = inicial;
+            this.tienda = tienda;
         }
+
+        public String getTienda() { return tienda; }
 
         public String getNombre() { return nombre; }
         public String getRol() { return rol; }
@@ -68,7 +72,10 @@ public class AvisosInterceptor implements HandlerInterceptor {
             String inicial = nombre.isEmpty() ? "?" : nombre.substring(0, 1).toUpperCase(Locale.ROOT);
             String rol = Rol.ADMIN.equals(usuario.getRol()) ? "Administrador" : "Empleado";
 
-            modelAndView.addObject("sesionUsuario", new SesionVista(nombre, rol, inicial));
+            Object nombreTienda = session.getAttribute("tiendaNombre");
+
+            modelAndView.addObject("sesionUsuario", new SesionVista(
+                    nombre, rol, inicial, nombreTienda == null ? "" : nombreTienda.toString()));
         }
     }
 }

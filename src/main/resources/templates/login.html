@@ -34,6 +34,22 @@
 
     <div id="zona-aviso">
 
+    <div th:if="${mensaje}"
+        class="alerta alerta-info"
+         style="text-align:left;"
+         role="status">
+
+            <span class="alerta-icono"><i class="ti ti-info-circle" aria-hidden="true"></i></span>
+
+            <span class="alerta-texto"
+                  th:text="${mensaje}"></span>
+
+            <button type="button"
+                    class="alerta-cerrar"
+                    aria-label="Cerrar aviso"><i class="ti ti-x" aria-hidden="true"></i></button>
+
+        </div>
+
         <div th:if="${error}"
              class="alerta alerta-error"
              style="text-align:left;"
@@ -101,6 +117,15 @@
         </button>
 
     </form>
+
+    <p style="margin:22px 0 0;color:#4a1020;font-size:16px;">
+        ¿Tienes una tienda y aún no tienes cuenta?
+        <a href="/registro" style="color:#df6794;font-weight:800;text-decoration:none;">Crea la tuya</a>
+    </p>
+    
+    <p style="margin:12px 0 0;color:#4a1020;font-size:12px;font-style:italic;opacity:.55;">
+        Bienaventurados los olvidadizos
+    </p>
 
 </div>
 

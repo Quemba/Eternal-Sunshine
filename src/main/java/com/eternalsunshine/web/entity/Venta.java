@@ -7,8 +7,8 @@ import java.util.List;
 
 @Entity
 @Table(name = "ventas",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"periodo", "consecutivo"}))
-public class Venta {
+        uniqueConstraints = @UniqueConstraint(columnNames = {"tienda_id", "periodo", "consecutivo"}))
+public class Venta extends EntidadDeTienda {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

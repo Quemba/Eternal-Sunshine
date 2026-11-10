@@ -126,7 +126,7 @@ public class VentaController {
         model.addAttribute("esAdmin", admin);
 
         if (admin) {
-            model.addAttribute("usuarios", usuarioRepository.findAll(Sort.by("username")));
+            model.addAttribute("usuarios", usuarioRepository.findByTiendaId(usuario.getTiendaId(), Sort.by("username")));
         }
 
         model.addAttribute("q", q.trim());

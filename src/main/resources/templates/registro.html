@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Crear mi tienda - Eternal Sunshine</title>
+
+    <link rel="icon" type="image/png" href="/images/logo.png">
+    <link rel="stylesheet" href="/css/login.css">
+    <link rel="stylesheet" href="/css/tabler/tabler-icons.min.css">
+    <link rel="stylesheet" href="/css/alertas.css">
+
+    <style>
+        body { padding: 24px 0; align-items: flex-start; }
+        .registro-container input, .registro-container button { font-family: inherit; }
+        .registro-container { margin: auto; }
+        .registro-container .titulo { font-size: clamp(28px, 8vw, 38px); }
+        .registro-container .subtitulo { font-size: 17px; margin-bottom: 24px; }
+        .registro-container .form-group { margin-bottom: 16px; }
+        .registro-container .form-group label { font-size: 18px; }
+        .registro-container .form-group input.campo-error { border-color: #b83255; box-shadow: 0 0 0 4px rgba(184,50,85,.18); }
+        .registro-container .ayuda { display: block; margin-top: 6px; color: #4a1020; font-size: 14px; opacity: .8; }
+        .registro-container .terminos { display: flex; gap: 10px; align-items: flex-start; text-align: left;
+            color: #4a1020; font-size: 15px; margin: 4px 0 20px; }
+        .registro-container .terminos input { margin-top: 3px; width: 18px; height: 18px; flex: none; }
+        .registro-container .terminos a { color: #df6794; font-weight: 800; }
+        .registro-container .pie { margin: 22px 0 0; color: #4a1020; font-size: 16px; }
+        .registro-container .pie a { color: #df6794; font-weight: 800; text-decoration: none; }
+        .campo-trampa { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+        /* ---------- Animación: la casita que palpita ---------- */
+        .entrada {
+            position: fixed; inset: 0; z-index: 50; overflow: hidden;
+            background: linear-gradient(to top, #ffe2b0 0%, #f7a8c0 55%, #e6b3e0 100%);
+            opacity: 0; visibility: hidden;
+            transition: opacity .35s ease, visibility .35s ease;
+        }
+        .entrada.visible { opacity: 1; visibility: visible; }
+        .entrada.saliendo { opacity: 0; }
+
+        /* Fondo oscuro: aparece en un palpito y se va en el siguiente */
+        .entrada .fondo-noche {
+            position: absolute; inset: 0;
+            background: linear-gradient(to top, #4a1020 0%, #5b2b73 50%, #241238 100%);
+            opacity: 0;
+            animation: noche 2.4s ease-in-out infinite;
+        }
+
+        .entrada .centro {
+            position: absolute; inset: 0; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 28px; padding: 0 20px;
+            text-align: center;
+        }
+
+        .entrada .casas {
+            position: relative; width: clamp(120px, 22vw, 220px);
+            filter: drop-shadow(0 8px 18px rgba(74,16,32,.35));
+            animation: latido 2.4s ease-in-out infinite;
+        }
+        .entrada .casas img { display: block; width: 100%; height: auto; }
+        .entrada .casas .casa-rota { position: absolute; left: 50%; bottom: 0; width: 120%; max-width: none; margin-left: -60%; opacity: 0; animation: casa-rota 2.4s ease-in-out infinite; }
+        .entrada .casas .casa-sana { animation: casa-sana 2.4s ease-in-out infinite; }
+
+        .entrada .textos { position: relative; min-height: 96px; width: 100%; animation: tinta 2.4s ease-in-out infinite; }
+        .entrada .texto { transition: opacity .5s ease, transform .5s ease; font-weight: 800; }
+        .entrada .texto-uno { font-size: clamp(20px, 5vw, 26px); }
+        .entrada .texto-dos { position: absolute; left: 0; right: 0; top: 0; opacity: 0; transform: translateY(8px); pointer-events: none; }
+        .entrada.lista .texto-uno { opacity: 0; transform: translateY(-8px); }
+        .entrada.lista .texto-dos { opacity: 1; transform: translateY(0); }
+
+        /* El nombre de la tienda es un botón: al tocarlo se entra a la app */
+        .entrada .letrero {
+            display: inline-flex; align-items: center; gap: 10px; max-width: 90%; margin-bottom: 10px; padding: 9px 20px;
+            border: 0; border-radius: 999px; background: #ffffff; color: #4a1020;
+            font-family: inherit; font-size: clamp(15px, 4vw, 18px); font-weight: 800;
+            box-shadow: 0 6px 18px rgba(74,16,32,.25);
+            pointer-events: none; cursor: pointer;
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+        .entrada .letrero .letrero-nombre { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .entrada .letrero i { flex: none; font-size: 20px; color: #df6794; }
+        .entrada.lista .letrero { pointer-events: auto; }
+        .entrada.lista .letrero:hover { transform: translateY(-2px) scale(1.04); box-shadow: 0 10px 24px rgba(74,16,32,.35); }
+        .entrada .letrero:focus-visible { outline: 3px solid #ffffff; outline-offset: 3px; }
+        .entrada .texto-dos strong { display: block; font-size: clamp(26px, 7vw, 40px); font-weight: 800; }
+
+        .solo-lector { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+        /* Dos palpitos por ciclo: el 1.o oscurece el fondo, el 2.o lo devuelve */
+        @keyframes latido {
+            0%   { transform: scale(1); }
+            8%   { transform: scale(1.14); }
+            20%  { transform: scale(1); }
+            50%  { transform: scale(1); }
+            58%  { transform: scale(1.14); }
+            70%  { transform: scale(1); }
+            100% { transform: scale(1); }
+        }
+        @keyframes noche {
+            0%   { opacity: 0; }
+            14%  { opacity: 1; }
+            50%  { opacity: 1; }
+            64%  { opacity: 0; }
+            100% { opacity: 0; }
+        }
+        /* La casa se cambia justo en el palpito: rota con el fondo oscuro, sana con el claro */
+        @keyframes casa-sana {
+            0%   { opacity: 1; }
+            8%   { opacity: 1; }
+            13%  { opacity: 0; }
+            56%  { opacity: 0; }
+            62%  { opacity: 1; }
+            100% { opacity: 1; }
+        }
+        @keyframes casa-rota {
+            0%   { opacity: 0; }
+            8%   { opacity: 0; }
+            13%  { opacity: 1; }
+            56%  { opacity: 1; }
+            62%  { opacity: 0; }
+            100% { opacity: 0; }
+        }
+        @keyframes tinta {
+            0%   { color: #4a1020; }
+            14%  { color: #ffffff; }
+            50%  { color: #ffffff; }
+            64%  { color: #4a1020; }
+            100% { color: #4a1020; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .entrada .casas, .entrada .casas img, .entrada .fondo-noche, .entrada .textos { animation: none !important; }
+            .entrada .textos { color: #4a1020; }
+            .entrada, .entrada * { transition-duration: .01s !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-container registro-container" id="tarjeta-registro">
+
+    <img src="/images/logo-completo.png" alt="Logo" class="logo">
+
+    <div class="titulo">Crea tu tienda</div>
+
+    <div class="subtitulo">Registra tu tienda y empieza a controlar tu inventario</div>
+
+    <div id="zona-aviso">
+
+        <div th:if="${error}"
+             class="alerta alerta-error"
+             style="text-align:left;"
+             role="alert">
+
+            <span class="alerta-icono"><i class="ti ti-alert-triangle" aria-hidden="true"></i></span>
+
+            <span class="alerta-texto" th:text="${error}"></span>
+
+            <button type="button" class="alerta-cerrar" aria-label="Cerrar aviso"><i class="ti ti-x" aria-hidden="true"></i></button>
+
+        </div>
+
+    </div>
+
+    <div th:if="${!registroAbierto}"
+         class="alerta alerta-info"
+         style="text-align:left;"
+         role="status">
+
+        <span class="alerta-icono"><i class="ti ti-info-circle" aria-hidden="true"></i></span>
+
+        <span class="alerta-texto">El registro de tiendas nuevas está cerrado por ahora.</span>
+
+    </div>
+
+    <form action="/registro" method="post" id="form-registro" th:if="${registroAbierto}" autocomplete="off" novalidate>
+
+        <div class="form-group">
+            <label for="tienda">Nombre de tu tienda</label>
+            <input type="text" id="tienda" name="tienda" maxlength="100"
+                   autocomplete="organization" th:value="${tienda}">
+        </div>
+
+        <div class="form-group">
+            <label for="username">Tu usuario</label>
+            <input type="text" id="username" name="username" maxlength="50"
+                   autocomplete="username" th:value="${username}">
+            <span class="ayuda">Debe ser único.</span>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Contraseña</label>
+            <input type="password" id="password" name="password" maxlength="64"
+                   autocomplete="new-password">
+            <span class="ayuda">Mínimo 8 caracteres, con letras y números.</span>
+        </div>
+
+        <div class="form-group">
+            <label for="confirmacion">Repite la contraseña</label>
+            <input type="password" id="confirmacion" name="confirmacion" maxlength="64"
+                   autocomplete="new-password">
+        </div>
+
+        <div class="campo-trampa" aria-hidden="true">
+            <label for="sitio_web">No llenar</label>
+            <input type="text" id="sitio_web" name="sitio_web" tabindex="-1" autocomplete="off">
+        </div>
+
+        <label class="terminos">
+            <input type="checkbox" id="acepto" name="acepto" value="si">
+            <span>Acepto los <a href="/terminos" target="_blank" rel="noopener">términos y el tratamiento de datos</a>.</span>
+        </label>
+
+        <button type="submit" class="btn-login" id="btn-registrar">Crear mi tienda</button>
+
+    </form>
+
+    <p class="pie">¿Ya tienes cuenta? <a href="/login">Inicia sesión</a></p>
+
+</div>
+
+<div class="entrada" id="entrada" aria-hidden="true">
+
+    <div class="fondo-noche"></div>
+
+    <div class="centro">
+
+        <div class="casas">
+            <img class="casa-sana" src="/images/anim-casa.png" alt="">
+            <img class="casa-rota" src="/images/anim-casadestrozada.png" alt="">
+        </div>
+
+        <div class="textos">
+            <div class="texto texto-uno">Creando tu tienda…</div>
+            <div class="texto texto-dos">
+                <button type="button" class="letrero" id="entrada-boton" aria-label="Entrar a mi tienda">
+                    <span class="letrero-nombre" id="entrada-nombre"></span>
+                    <i class="ti ti-arrow-right" aria-hidden="true"></i>
+                </button>
+                <strong>¡Tu tienda está lista!</strong>
+            </div>
+        </div>
+
+    </div>
+
+    <span class="solo-lector" role="status">Creando tu tienda</span>
+
+</div>
+
+<script src="/js/alertas.js"></script>
+
+<script>
+    (function () {
+        var MINIMO_MS = 700;
+        var MINIMO_EXITO_MS = 3200;
+        var SALIDA_MS = 400;
+
+        var formulario = document.getElementById('form-registro');
+
+        if (!formulario) return;
+
+        var tarjeta = document.getElementById('tarjeta-registro');
+        var zonaAviso = document.getElementById('zona-aviso');
+        var boton = document.getElementById('btn-registrar');
+        var pantalla = document.getElementById('entrada');
+        var nombreLetrero = document.getElementById('entrada-nombre');
+        var botonEntrar = document.getElementById('entrada-boton');
+
+        var tienda = document.getElementById('tienda');
+        var usuario = document.getElementById('username');
+        var clave = document.getElementById('password');
+        var confirmacion = document.getElementById('confirmacion');
+        var acepto = document.getElementById('acepto');
+
+        var campos = [tienda, usuario, clave, confirmacion];
+
+        var enviando = false;
+        var mostradaEn = 0;
+        var esDemo = /[?&]demo\b/.test(window.location.search);
+        var entrando = false;
+
+        function esperar(ms) {
+            return new Promise(function (resolver) {
+                setTimeout(resolver, ms);
+            });
+        }
+
+        function entrar() {
+            if (entrando) return;
+
+            entrando = true;
+            pantalla.classList.add('saliendo');
+
+            setTimeout(function () {
+                window.location.href = '/';
+            }, SALIDA_MS);
+        }
+
+        botonEntrar.addEventListener('click', function () {
+            if (esDemo) {
+                ocultarPantalla();
+                setTimeout(verDemo, 400);
+                return;
+            }
+
+            entrar();
+        });
+
+        function mostrarPantalla() {
+            mostradaEn = Date.now();
+            pantalla.classList.remove('saliendo');
+            pantalla.classList.remove('lista');
+            pantalla.classList.add('visible');
+            pantalla.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('entrando');
+        }
+
+        function ocultarPantalla() {
+            mostradaEn = 0;
+            pantalla.classList.remove('visible');
+            pantalla.classList.remove('lista');
+            pantalla.classList.remove('saliendo');
+            pantalla.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('entrando');
+        }
+
+        function restablecerBoton() {
+            boton.disabled = false;
+            boton.textContent = 'Crear mi tienda';
+            enviando = false;
+        }
+
+        function mostrarError(texto) {
+            zonaAviso.innerHTML = '';
+
+            var caja = document.createElement('div');
+            caja.className = 'alerta alerta-error';
+            caja.style.textAlign = 'left';
+            caja.setAttribute('role', 'alert');
+
+            var icono = document.createElement('span');
+            icono.className = 'alerta-icono';
+            icono.innerHTML = '<i class="ti ti-alert-triangle" aria-hidden="true"></i>';
+
+            var mensaje = document.createElement('span');
+            mensaje.className = 'alerta-texto';
+            mensaje.textContent = texto;
+
+            var cerrar = document.createElement('button');
+            cerrar.type = 'button';
+            cerrar.className = 'alerta-cerrar';
+            cerrar.setAttribute('aria-label', 'Cerrar aviso');
+            cerrar.innerHTML = '<i class="ti ti-x" aria-hidden="true"></i>';
+            cerrar.addEventListener('click', function () {
+                caja.remove();
+            });
+
+            caja.appendChild(icono);
+            caja.appendChild(mensaje);
+            caja.appendChild(cerrar);
+            zonaAviso.appendChild(caja);
+        }
+
+        function sacudirTarjeta() {
+            tarjeta.classList.remove('sacudir');
+            void tarjeta.offsetWidth;
+            tarjeta.classList.add('sacudir');
+        }
+
+        function marcar(campo) {
+            campos.forEach(function (c) {
+                c.classList.remove('campo-error');
+            });
+
+            if (campo && campo.classList) {
+                campo.classList.add('campo-error');
+            }
+        }
+
+        function problema() {
+            var nombreTienda = tienda.value.trim();
+            var nombreUsuario = usuario.value.trim();
+            var contrasena = clave.value.trim();
+
+            if (nombreTienda === '') {
+                return { campo: tienda, texto: 'Escribe el nombre de tu tienda.' };
+            }
+
+            if (nombreTienda.length < 3) {
+                return { campo: tienda, texto: 'El nombre de la tienda debe tener al menos 3 caracteres.' };
+            }
+
+            if (nombreUsuario === '') {
+                return { campo: usuario, texto: 'Escribe tu usuario.' };
+            }
+
+            if (nombreUsuario.length < 3) {
+                return { campo: usuario, texto: 'El usuario debe tener al menos 3 caracteres.' };
+            }
+
+            if (!/^[A-Za-z0-9._-]+$/.test(nombreUsuario)) {
+                return { campo: usuario, texto: 'Usa solo letras, números, punto, guion o guion bajo.' };
+            }
+
+            if (contrasena === '') {
+                return { campo: clave, texto: 'Escribe una contraseña.' };
+            }
+
+            if (contrasena.length < 8) {
+                return { campo: clave, texto: 'La contraseña debe tener al menos 8 caracteres.' };
+            }
+
+            if (!/[A-Za-z]/.test(contrasena) || !/[0-9]/.test(contrasena)) {
+                return { campo: clave, texto: 'Incluye al menos una letra y un número.' };
+            }
+
+            if (confirmacion.value.trim() !== contrasena) {
+                return { campo: confirmacion, texto: 'Las contraseñas no coinciden.' };
+            }
+
+            if (!acepto.checked) {
+                return { campo: acepto, texto: 'Debes aceptar los términos para continuar.' };
+            }
+
+            return null;
+        }
+
+        // Vista previa de la animación: abre /registro?demo (toca el botón para repetirla)
+        function verDemo() {
+            mostrarPantalla();
+            setTimeout(function () {
+                pantalla.classList.add('lista');
+            }, 1500);
+        }
+
+        if (esDemo) {
+            nombreLetrero.textContent = 'Tienda de prueba';
+            verDemo();
+        }
+
+        campos.forEach(function (campo) {
+            campo.addEventListener('input', function () {
+                campo.classList.remove('campo-error');
+            });
+        });
+
+        formulario.addEventListener('submit', async function (evento) {
+            evento.preventDefault();
+
+            if (enviando) return;
+
+            var fallo = problema();
+
+            if (fallo) {
+                marcar(fallo.campo);
+                mostrarError(fallo.texto);
+                sacudirTarjeta();
+                fallo.campo.focus();
+                return;
+            }
+
+            enviando = true;
+            boton.disabled = true;
+            boton.textContent = 'Creando tu tienda...';
+            nombreLetrero.textContent = tienda.value.trim();
+
+            mostrarPantalla();
+
+            var exito = false;
+            var fallaRed = false;
+            var mensajeServidor = '';
+
+            try {
+                var respuesta = await fetch('/registro', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams(new FormData(formulario)).toString(),
+                    redirect: 'manual',
+                    credentials: 'same-origin'
+                });
+
+                if (respuesta.type === 'opaqueredirect') {
+                    exito = true;
+
+                } else {
+                    var html = await respuesta.text();
+                    var documento = new DOMParser().parseFromString(html, 'text/html');
+                    var texto = documento.querySelector('#zona-aviso .alerta-texto');
+
+                    if (texto && texto.textContent.trim() !== '') {
+                        mensajeServidor = texto.textContent.trim();
+                    } else {
+                        fallaRed = true;
+                    }
+                }
+
+            } catch (e) {
+                fallaRed = true;
+            }
+
+            if (fallaRed) {
+                ocultarPantalla();
+                formulario.submit();
+                return;
+            }
+
+            var transcurrido = Date.now() - mostradaEn;
+            await esperar(Math.max(0, (exito ? MINIMO_EXITO_MS : MINIMO_MS) - transcurrido));
+
+            if (exito) {
+                // La tienda ya está creada: se queda esperando a que toque el botón
+                pantalla.classList.add('lista');
+                botonEntrar.focus();
+                return;
+            }
+
+            ocultarPantalla();
+            mostrarError(mensajeServidor);
+            sacudirTarjeta();
+            restablecerBoton();
+        });
+
+        window.addEventListener('pageshow', function (evento) {
+            if (evento.persisted) {
+                entrando = false;
+                ocultarPantalla();
+                restablecerBoton();
+            }
+        });
+    })();
+</script>
+
+</body>
+</html>

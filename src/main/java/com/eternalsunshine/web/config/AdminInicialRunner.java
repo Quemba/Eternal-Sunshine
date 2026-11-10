@@ -1,16 +1,18 @@
 package com.eternalsunshine.web.config;
 
 import com.eternalsunshine.web.repository.UsuarioRepository;
-import com.eternalsunshine.web.service.UsuarioService;
+import com.eternalsunshine.web.service.TiendaService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 @Component
+@Order(2)
 public class AdminInicialRunner implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(AdminInicialRunner.class);
@@ -25,7 +27,10 @@ public class AdminInicialRunner implements ApplicationRunner {
     private UsuarioRepository usuarioRepository;
 
     @Autowired
-    private UsuarioService usuarioService;
+    private TiendaService tiendaService;
+
+    @Value("${app.admin.tienda:Tienda principal}")
+    private String nombreTienda;
 
     @Override
     public void run(ApplicationArguments args) {
@@ -40,7 +45,7 @@ public class AdminInicialRunner implements ApplicationRunner {
                 return;
             }
 
-            usuarioService.crearAdminInicial(username, password);
+            tiendaService.crearConAdmin(nombreTienda, username, password);
 
             log.info("Administrador inicial «{}» creado.", username.trim());
 

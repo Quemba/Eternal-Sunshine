@@ -48,7 +48,9 @@ public class LoginInterceptor implements HandlerInterceptor {
 
             boolean valido = actual != null
                     && actual.estaActivo()
-                    && Objects.equals(actual.getPassword(), usuario.getPassword());
+                    && Objects.equals(actual.getPassword(), usuario.getPassword())
+                    && actual.getTiendaId() != null
+                    && Objects.equals(actual.getTiendaId(), usuario.getTiendaId());
 
             if (!valido) {
                 session.invalidate();

@@ -141,7 +141,7 @@
 
                 <p class="vacio" th:if="${resultado.total == 0}">
                     <span th:if="${hayFiltros}">No hay movimientos con esos filtros. <a href="/historial">Limpiar filtros</a></span>
-                    <span th:unless="${hayFiltros}">Todavía no hay movimientos registrados.</span>
+                    <span th:unless="${hayFiltros}">Aún no hay recuerdos aquí.</span>
                 </p>
 
                 <table th:if="${resultado.total > 0}" style="width:100%; border-collapse: collapse;">

@@ -69,7 +69,7 @@ public class HistorialController {
         }
 
         List<Usuario> usuarios = admin
-                ? usuarioRepository.findAll(Sort.by("username"))
+                ? usuarioRepository.findByTiendaId(usuarioActual.getTiendaId(), Sort.by("username"))
                 : (usuarioActual == null ? new ArrayList<>() : List.of(usuarioActual));
 
         model.addAttribute("resultado", resultado);

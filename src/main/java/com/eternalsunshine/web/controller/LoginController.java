@@ -2,6 +2,7 @@ package com.eternalsunshine.web.controller;
 
 import com.eternalsunshine.web.config.LoginIntentosService;
 import com.eternalsunshine.web.entity.Usuario;
+import com.eternalsunshine.web.service.TiendaService;
 import com.eternalsunshine.web.service.UsuarioService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,10 +19,20 @@ public class LoginController {
     private UsuarioService usuarioService;
 
     @Autowired
+    private TiendaService tiendaService;
+
+    @Autowired
     private LoginIntentosService intentos;
 
     @GetMapping("/login")
-    public String mostrarLogin() {
+    public String mostrarLogin(
+            @RequestParam(required = false) String salio,
+            Model model) {
+
+        if (salio != null) {
+            model.addAttribute("mensaje", "Sesión cerrada. Esto tampoco lo recordaremos.");
+        }
+
         return "login";
     }
 
@@ -67,6 +78,7 @@ public class LoginController {
             HttpSession sesion = request.getSession(true);
             request.changeSessionId();
             sesion.setAttribute("usuarioLogueado", usuario);
+            sesion.setAttribute("tiendaNombre", tiendaService.nombreDe(usuario.getTiendaId()));
 
             return "redirect:/";
         }
@@ -83,6 +95,6 @@ public class LoginController {
     @PostMapping("/logout")
     public String logout(HttpSession session) {
         session.invalidate();
-        return "redirect:/login";
+        return "redirect:/login?salio";
     }
 }

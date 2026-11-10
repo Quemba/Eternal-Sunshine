@@ -3,14 +3,14 @@ package com.eternalsunshine.web.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "productos")
-public class Producto {
+@Table(name = "productos",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"tienda_id", "codigo"}))
+public class Producto extends EntidadDeTienda {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(unique = true)
     private String codigo;
 
     private String nombre;

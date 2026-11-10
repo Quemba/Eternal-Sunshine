@@ -18,7 +18,8 @@ public class Usuario {
     @Enumerated(EnumType.STRING)
     private Rol rol;
 
-    private String tienda;
+    @Column(name = "tienda_id")
+    private Integer tiendaId;
 
     private Boolean activo = true;
 
@@ -61,12 +62,12 @@ public class Usuario {
         this.rol = rol;
     }
 
-    public String getTienda() {
-        return tienda;
+    public Integer getTiendaId() {
+        return tiendaId;
     }
 
-    public void setTienda(String tienda) {
-        this.tienda = tienda;
+    public void setTiendaId(Integer tiendaId) {
+        this.tiendaId = tiendaId;
     }
 
     public Boolean getActivo() {

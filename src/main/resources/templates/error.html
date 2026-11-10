@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -25,18 +25,21 @@
         Eternal Sunshine
     </div>
 
-    <div class="subtitulo">
-        Ocurrió un error inesperado
+    <div class="subtitulo"
+         th:text="${status == 404} ? 'Este recuerdo no se encuentra' : 'Algo se nos olvidó'">
+        Algo se nos olvidó
     </div>
 
-    <p style="text-align:center; margin:20px 0;">
-        Algo salió mal al procesar tu solicitud. Por favor intenta de nuevo o vuelve al inicio.
+    <p style="text-align:center; margin:20px 0;"
+       th:text="${status == 404} ? 'Quizás ya fue borrado.' : 'Ocurrió un error inesperado al procesar tu solicitud. Inténtalo de nuevo o vuelve al inicio.'">
+        Ocurrió un error inesperado al procesar tu solicitud. Inténtalo de nuevo o vuelve al inicio.
     </p>
 
     <a href="/"
        class="btn-login"
+       title="Volver al inicio"
        style="display:block; text-align:center; text-decoration:none;">
-        Volver al inicio
+        Nos vemos en Montauk
     </a>
 
 </div>

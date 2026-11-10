@@ -121,6 +121,10 @@
         <div class="nav-usuario-datos">
             <strong th:text="${sesionUsuario.nombre}">admin</strong>
             <span th:text="${sesionUsuario.rol}">Administrador</span>
+            <span th:if="${!#strings.isEmpty(sesionUsuario.tienda)}"
+                  th:text="${sesionUsuario.tienda}"
+                  th:title="${sesionUsuario.tienda}"
+                  style="display:block;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Mi tienda</span>
         </div>
 
         <form method="post" action="/logout">

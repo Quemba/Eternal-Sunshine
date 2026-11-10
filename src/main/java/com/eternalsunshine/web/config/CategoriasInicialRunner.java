@@ -1,5 +1,7 @@
 package com.eternalsunshine.web.config;
 
+import com.eternalsunshine.web.entity.Tienda;
+import com.eternalsunshine.web.repository.TiendaRepository;
 import com.eternalsunshine.web.service.CategoriaService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,14 +18,24 @@ public class CategoriasInicialRunner implements ApplicationRunner {
     @Autowired
     private CategoriaService categoriaService;
 
+    @Autowired
+    private TiendaRepository tiendaRepository;
+
     @Override
     public void run(ApplicationArguments args) {
+
+        for (Tienda tienda : tiendaRepository.findAll()) {
+            TiendaContexto.ejecutar(tienda.getId(), () -> prepararTienda(tienda.getId()));
+        }
+    }
+
+    private void prepararTienda(Integer tiendaId) {
 
         try {
             int cambios = categoriaService.unificarExistentes();
 
             if (cambios > 0) {
-                log.info("Categorías unificadas en {} productos.", cambios);
+                log.info("Tienda {}: categorías unificadas en {} productos.", tiendaId, cambios);
             }
         } catch (Exception e) {
             log.error("No se pudieron unificar las categorías existentes: {}", e.toString(), e);
@@ -33,7 +45,7 @@ public class CategoriasInicialRunner implements ApplicationRunner {
             int sembrados = categoriaService.sembrarAprendizajeSiVacio();
 
             if (sembrados > 0) {
-                log.info("Aprendizaje de categorías inicializado con {} productos.", sembrados);
+                log.info("Tienda {}: aprendizaje de categorías inicializado con {} productos.", tiendaId, sembrados);
             }
         } catch (Exception e) {
             log.error("No se pudo inicializar el aprendizaje de categorías: {}", e.toString(), e);

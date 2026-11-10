@@ -10,8 +10,8 @@ import jakarta.persistence.UniqueConstraint;
 
 @Entity
 @Table(name = "contadores_documento",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"tipo", "periodo"}))
-public class ContadorDocumento {
+        uniqueConstraints = @UniqueConstraint(columnNames = {"tienda_id", "tipo", "periodo"}))
+public class ContadorDocumento extends EntidadDeTienda {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

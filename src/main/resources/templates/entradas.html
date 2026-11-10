@@ -111,7 +111,7 @@
 
                 <p class="vacio" th:if="${resultado.total == 0}">
                     <span th:if="${hayFiltros}">No hay entradas con esos filtros. <a href="/entradas" data-limpiar-todo>Limpiar filtros</a></span>
-                    <span th:unless="${hayFiltros}">Todavía no hay entradas registradas.</span>
+                    <span th:unless="${hayFiltros}">Aún no hay recuerdos aquí.</span>
                 </p>
 
                 <table th:if="${resultado.total > 0}" style="width:100%; border-collapse: collapse;">

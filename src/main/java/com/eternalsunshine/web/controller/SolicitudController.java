@@ -171,7 +171,7 @@ public class SolicitudController {
         sol.setVistaPorSolicitante(false);
         solicitudRepository.save(sol);
 
-        redirectAttributes.addFlashAttribute("mensaje", "Solicitud aprobada correctamente.");
+        redirectAttributes.addFlashAttribute("mensaje", "Plegaria aceptada. La solicitud fue aprobada.");
         return "redirect:/solicitudes";
     }
 
@@ -203,7 +203,7 @@ public class SolicitudController {
                         + (sol.getAccion() == AccionSolicitud.CREAR_PRODUCTO ? "CREAR" : "EDITAR")
                         + " PRODUCTO: " + sol.getNombre());
 
-        redirectAttributes.addFlashAttribute("mensaje", "Solicitud rechazada.");
+        redirectAttributes.addFlashAttribute("mensaje", "Deseo resignado. La solicitud fue rechazada.");
         return "redirect:/solicitudes";
     }
 }

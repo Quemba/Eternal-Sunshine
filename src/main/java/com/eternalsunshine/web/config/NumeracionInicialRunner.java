@@ -1,5 +1,7 @@
 package com.eternalsunshine.web.config;
 
+import com.eternalsunshine.web.entity.Tienda;
+import com.eternalsunshine.web.repository.TiendaRepository;
 import com.eternalsunshine.web.service.NumeracionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,12 +18,21 @@ public class NumeracionInicialRunner implements ApplicationRunner {
     @Autowired
     private NumeracionService numeracionService;
 
+    @Autowired
+    private TiendaRepository tiendaRepository;
+
     @Override
     public void run(ApplicationArguments args) {
-        try {
-            numeracionService.rellenarPendientes();
-        } catch (Exception e) {
-            log.error("No se pudo numerar los registros existentes: {}", e.toString(), e);
+        for (Tienda tienda : tiendaRepository.findAll()) {
+
+            TiendaContexto.ejecutar(tienda.getId(), () -> {
+                try {
+                    numeracionService.rellenarPendientes();
+                } catch (Exception e) {
+                    log.error("No se pudo numerar los registros de la tienda {}: {}",
+                            tienda.getId(), e.toString(), e);
+                }
+            });
         }
     }
 }

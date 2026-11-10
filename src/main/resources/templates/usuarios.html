@@ -135,13 +135,6 @@
                             </select>
                         </div>
 
-                        <div class="campo">
-                            <label for="nu-tienda">Tienda (opcional)</label>
-                            <input type="text" id="nu-tienda" name="tienda"
-                                   maxlength="100" autocomplete="off"
-                                   th:value="${formTienda}">
-                        </div>
-
                     </div>
 
                     <div class="acciones-form">
@@ -171,7 +164,6 @@
 
                     <div class="usuario-datos">
                         <strong th:text="${u.username}"></strong>
-                        <span class="sub" th:if="${u.tienda != null and !#strings.isEmpty(u.tienda)}" th:text="${u.tienda}"></span>
                     </div>
 
                     <div class="chips">

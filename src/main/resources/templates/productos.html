@@ -158,7 +158,7 @@
 
             <p class="vacio" th:if="${resultado.total == 0}">
                 <span th:if="${hayFiltros}">No se encontraron productos con esos filtros. <a href="/productos" data-limpiar-todo>Limpiar filtros</a></span>
-                <span th:unless="${hayFiltros}">Todavía no hay productos registrados.</span>
+                <span th:unless="${hayFiltros}">Nada que recordar... todavía.</span>
             </p>
 
             <table th:if="${resultado.total > 0}" style="width:100%; border-collapse: collapse;">

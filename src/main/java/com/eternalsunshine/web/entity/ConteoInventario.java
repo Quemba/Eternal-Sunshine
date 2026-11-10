@@ -21,8 +21,8 @@ import java.util.List;
 
 @Entity
 @Table(name = "conteos_inventario",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"periodo", "consecutivo"}))
-public class ConteoInventario {
+        uniqueConstraints = @UniqueConstraint(columnNames = {"tienda_id", "periodo", "consecutivo"}))
+public class ConteoInventario extends EntidadDeTienda {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

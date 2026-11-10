@@ -64,7 +64,7 @@
         <div class="header">
 
             <h1>
-                <span id="saludo">Bienvenido</span>,
+                <span id="saludo">Buenos días</span>, bienaventurado
                 <span th:text="${usuario}"></span>
             </h1>
 
@@ -158,7 +158,7 @@
                 <div class="grafica-panel">
                     <h3>Más vendidos (último mes)</h3>
                     <div th:if="${#lists.isEmpty(nombresTop)}" class="sin-datos">
-                        Aún no hay ventas registradas.
+                        Aún no hay recuerdos aquí.
                     </div>
                     <div th:unless="${#lists.isEmpty(nombresTop)}" class="grafica-caja">
                         <canvas id="grafica-top"></canvas>
