@@ -23,6 +23,9 @@ public class Usuario {
 
     private Boolean activo = true;
 
+    @Column(length = 150)
+    private String email;
+
     public Usuario() {
     }
 
@@ -76,5 +79,13 @@ public class Usuario {
 
     public void setActivo(Boolean activo) {
         this.activo = activo;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

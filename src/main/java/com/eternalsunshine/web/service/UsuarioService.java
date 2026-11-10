@@ -144,7 +144,7 @@ public class UsuarioService {
         return nombre;
     }
 
-    private String validarPassword(String password, String username) {
+    public String validarPassword(String password, String username) {
 
         String clave = password == null ? "" : password.trim();
 

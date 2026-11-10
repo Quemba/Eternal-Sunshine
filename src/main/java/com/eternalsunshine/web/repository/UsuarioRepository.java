@@ -14,6 +14,9 @@ public interface UsuarioRepository
     Usuario findByUsernameIgnoreCase(
             String username);
 
+    List<Usuario> findByEmailIgnoreCase(
+            String email);
+
     List<Usuario> findByTiendaId(
             Integer tiendaId);
 

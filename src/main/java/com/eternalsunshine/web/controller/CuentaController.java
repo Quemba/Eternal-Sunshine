@@ -3,6 +3,7 @@ package com.eternalsunshine.web.controller;
 import com.eternalsunshine.web.config.LoginIntentosService;
 import com.eternalsunshine.web.entity.Rol;
 import com.eternalsunshine.web.entity.Usuario;
+import com.eternalsunshine.web.service.RecuperacionService;
 import com.eternalsunshine.web.service.UsuarioService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -23,6 +24,9 @@ public class CuentaController {
     @Autowired
     private LoginIntentosService intentos;
 
+    @Autowired
+    private RecuperacionService recuperacionService;
+
     private Usuario sesion(HttpSession session) {
         return (Usuario) session.getAttribute("usuarioLogueado");
     }
@@ -33,6 +37,7 @@ public class CuentaController {
         Usuario usuario = sesion(session);
 
         model.addAttribute("esAdmin", usuario != null && Rol.ADMIN.equals(usuario.getRol()));
+        model.addAttribute("correoActual", usuario == null ? null : usuario.getEmail());
 
         return "cuenta-contrasena";
     }
@@ -77,6 +82,55 @@ public class CuentaController {
             request.changeSessionId();
 
             redirectAttributes.addFlashAttribute("mensaje", "Tu contraseña se cambió correctamente.");
+
+        } catch (UsuarioService.PasswordActualIncorrectaException e) {
+            intentos.registrarFallo(ip, usuario.getUsername());
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+
+        return "redirect:/cuenta/contrasena";
+    }
+
+    @PostMapping("/cuenta/correo")
+    public String cambiarCorreo(
+            @RequestParam(defaultValue = "") String correo,
+            @RequestParam(defaultValue = "") String actual,
+            HttpServletRequest request,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        Usuario usuario = sesion(session);
+
+        if (usuario == null) {
+            return "redirect:/login";
+        }
+
+        String ip = request.getRemoteAddr() == null ? "desconocida" : request.getRemoteAddr();
+
+        long espera = intentos.milisegundosBloqueado(ip, usuario.getUsername());
+
+        if (espera > 0) {
+
+            long minutos = (espera + 59_999) / 60_000;
+
+            redirectAttributes.addFlashAttribute("error",
+                    "Demasiados intentos fallidos. Inténtalo de nuevo en "
+                            + minutos + (minutos == 1 ? " minuto." : " minutos."));
+
+            return "redirect:/cuenta/contrasena";
+        }
+
+        try {
+            Usuario actualizado = recuperacionService.cambiarCorreo(usuario.getId(), correo, actual);
+
+            intentos.registrarExito(ip, usuario.getUsername());
+
+            session.setAttribute("usuarioLogueado", actualizado);
+
+            redirectAttributes.addFlashAttribute("mensaje", "Tu correo de recuperación quedó guardado.");
 
         } catch (UsuarioService.PasswordActualIncorrectaException e) {
             intentos.registrarFallo(ip, usuario.getUsername());

@@ -33,6 +33,8 @@ public class WebConfig implements WebMvcConfigurer {
                         "/logout",
                         "/registro",
                         "/terminos",
+                        "/recuperar",
+                        "/restablecer",
                         "/css/**",
                         "/js/**",
                         "/images/**",

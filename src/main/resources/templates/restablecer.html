@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="no-referrer">
+    <title>Contraseña nueva - Eternal Sunshine</title>
+
+    <link rel="icon" type="image/png" href="/images/logo.png">
+    <link rel="stylesheet" href="/css/login.css">
+    <link rel="stylesheet" href="/css/tabler/tabler-icons.min.css">
+    <link rel="stylesheet" href="/css/alertas.css">
+
+    <style>
+        body { padding: 24px 0; }
+        .restablecer-container .titulo { font-size: clamp(28px, 8vw, 38px); }
+        .restablecer-container .subtitulo { font-size: 17px; margin-bottom: 24px; }
+        .restablecer-container input, .restablecer-container button { font-family: inherit; }
+        .restablecer-container .ayuda { display: block; margin-top: 6px; color: #4a1020; font-size: 14px; opacity: .8; }
+        .restablecer-container .pie { margin: 22px 0 0; color: #4a1020; font-size: 16px; }
+        .restablecer-container .pie a { color: #df6794; font-weight: 800; text-decoration: none; }
+        .restablecer-container .frase { margin: 12px 0 0; color: #4a1020; font-size: 12px; font-style: italic; opacity: .55; }
+    </style>
+</head>
+<body>
+
+<div class="login-container restablecer-container">
+
+    <img src="/images/logo-completo.png" alt="Logo" class="logo">
+
+    <div class="titulo" th:if="${valido}">Contraseña nueva</div>
+    <div class="titulo" th:unless="${valido}">Enlace vencido</div>
+
+    <div class="subtitulo" th:if="${valido}">Elige una que sí recuerdes.</div>
+
+    <div th:if="${error}" class="alerta alerta-error" style="text-align:left;" role="alert">
+        <span class="alerta-icono"><i class="ti ti-alert-triangle" aria-hidden="true"></i></span>
+        <span class="alerta-texto" th:text="${error}"></span>
+        <button type="button" class="alerta-cerrar" aria-label="Cerrar aviso"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </div>
+
+    <div th:unless="${valido}">
+
+        <div class="alerta alerta-error" style="text-align:left;" role="alert">
+            <span class="alerta-icono"><i class="ti ti-alert-triangle" aria-hidden="true"></i></span>
+            <span class="alerta-texto">Este enlace no es válido o ya venció. Pide uno nuevo.</span>
+        </div>
+
+        <p class="pie"><a href="/recuperar">Pedir un enlace nuevo</a></p>
+
+    </div>
+
+    <form action="/restablecer" method="post" th:if="${valido}" autocomplete="off" id="form-restablecer">
+
+        <input type="hidden" name="token" th:value="${token}">
+
+        <div class="form-group">
+            <label for="nueva">Contraseña nueva</label>
+            <div class="campo-clave">
+                <input type="password" id="nueva" name="nueva" required
+                       minlength="8" maxlength="64" autocomplete="new-password">
+                <button type="button" class="btn-ojo" data-ver-clave="nueva"
+                        aria-label="Mostrar contraseña" title="Mostrar contraseña">
+                    <i class="ti ti-eye" aria-hidden="true"></i>
+                </button>
+            </div>
+            <span class="ayuda">Entre 8 y 64 caracteres, con al menos una letra y un número.</span>
+        </div>
+
+        <div class="form-group">
+            <label for="confirmacion">Repite la contraseña</label>
+            <div class="campo-clave">
+                <input type="password" id="confirmacion" name="confirmacion" required
+                       minlength="8" maxlength="64" autocomplete="new-password">
+                <button type="button" class="btn-ojo" data-ver-clave="confirmacion"
+                        aria-label="Mostrar contraseña" title="Mostrar contraseña">
+                    <i class="ti ti-eye" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-login">Guardar contraseña</button>
+
+    </form>
+
+    <p class="pie" th:if="${valido}"><a href="/login">Volver a iniciar sesión</a></p>
+
+    <p class="frase">Bienaventurados los olvidadizos</p>
+
+</div>
+
+<script src="/js/alertas.js"></script>
+
+<script>
+    document.querySelectorAll('[data-ver-clave]').forEach(function (boton) {
+        boton.addEventListener('click', function () {
+            var campo = document.getElementById(boton.getAttribute('data-ver-clave'));
+
+            if (!campo) return;
+
+            var oculto = campo.type === 'password';
+
+            campo.type = oculto ? 'text' : 'password';
+            boton.setAttribute('aria-label', oculto ? 'Ocultar contraseña' : 'Mostrar contraseña');
+            boton.innerHTML = oculto
+                ? '<i class="ti ti-eye-off" aria-hidden="true"></i>'
+                : '<i class="ti ti-eye" aria-hidden="true"></i>';
+        });
+    });
+
+    (function () {
+        var nueva = document.getElementById('nueva');
+        var confirmacion = document.getElementById('confirmacion');
+
+        if (!nueva || !confirmacion) return;
+
+        function comprobar() {
+            confirmacion.setCustomValidity(
+                confirmacion.value !== '' && confirmacion.value !== nueva.value
+                    ? 'Las contraseñas no coinciden.'
+                    : '');
+        }
+
+        nueva.addEventListener('input', comprobar);
+        confirmacion.addEventListener('input', comprobar);
+    })();
+</script>
+
+</body>
+</html>

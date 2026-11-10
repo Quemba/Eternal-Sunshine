@@ -2,6 +2,7 @@ package com.eternalsunshine.web.controller;
 
 import com.eternalsunshine.web.config.RegistroLimiteService;
 import com.eternalsunshine.web.entity.Usuario;
+import com.eternalsunshine.web.service.RecuperacionService;
 import com.eternalsunshine.web.service.TiendaService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -22,6 +23,9 @@ public class RegistroController {
 
     @Autowired
     private RegistroLimiteService limite;
+
+    @Autowired
+    private RecuperacionService recuperacionService;
 
     @GetMapping("/registro")
     public String mostrar(HttpSession session, Model model) {
@@ -44,6 +48,7 @@ public class RegistroController {
     public String procesar(
             @RequestParam(defaultValue = "") String tienda,
             @RequestParam(defaultValue = "") String username,
+            @RequestParam(defaultValue = "") String correo,
             @RequestParam(defaultValue = "") String password,
             @RequestParam(defaultValue = "") String confirmacion,
             @RequestParam(defaultValue = "") String acepto,
@@ -55,6 +60,7 @@ public class RegistroController {
         model.addAttribute("registroAbierto", tiendaService.registroAbierto());
         model.addAttribute("tienda", tienda);
         model.addAttribute("username", username);
+        model.addAttribute("correo", correo);
 
         String ip = request.getRemoteAddr() == null ? "desconocida" : request.getRemoteAddr();
 
@@ -80,7 +86,15 @@ public class RegistroController {
         }
 
         try {
+            String correoLimpio = RecuperacionService.limpiarCorreo(correo);
+
             Usuario admin = tiendaService.registrar(tienda, username, password);
+
+            try {
+                admin = recuperacionService.fijarCorreo(admin.getId(), correoLimpio);
+            } catch (Exception e) {
+                // La tienda ya existe; el correo se puede agregar después desde «Cambiar contraseña».
+            }
 
             HttpSession sesion = request.getSession(true);
             request.changeSessionId();

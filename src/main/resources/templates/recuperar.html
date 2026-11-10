@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Recuperar contraseña - Eternal Sunshine</title>
+
+    <link rel="icon" type="image/png" href="/images/logo.png">
+    <link rel="stylesheet" href="/css/login.css">
+    <link rel="stylesheet" href="/css/tabler/tabler-icons.min.css">
+    <link rel="stylesheet" href="/css/alertas.css">
+
+    <style>
+        body { padding: 24px 0; }
+        .recuperar-container .titulo { font-size: clamp(28px, 8vw, 38px); }
+        .recuperar-container .subtitulo { font-size: 17px; margin-bottom: 24px; }
+        .recuperar-container input, .recuperar-container button { font-family: inherit; }
+        .recuperar-container .ayuda { display: block; margin-top: 6px; color: #4a1020; font-size: 14px; opacity: .8; }
+        .recuperar-container .pie { margin: 22px 0 0; color: #4a1020; font-size: 16px; }
+        .recuperar-container .pie a { color: #df6794; font-weight: 800; text-decoration: none; }
+        .recuperar-container .nota { margin: 14px 0 0; color: #4a1020; font-size: 14px; line-height: 1.5; text-align: left; }
+        .recuperar-container .frase { margin: 12px 0 0; color: #4a1020; font-size: 12px; font-style: italic; opacity: .55; }
+    </style>
+</head>
+<body>
+
+<div class="login-container recuperar-container">
+
+    <img src="/images/logo-completo.png" alt="Logo" class="logo">
+
+    <div class="titulo">¿Se te olvidó?</div>
+
+    <div class="subtitulo">Pasa, hasta lo mejor se olvida.</div>
+
+    <div th:if="${error}" class="alerta alerta-error" style="text-align:left;" role="alert">
+        <span class="alerta-icono"><i class="ti ti-alert-triangle" aria-hidden="true"></i></span>
+        <span class="alerta-texto" th:text="${error}"></span>
+        <button type="button" class="alerta-cerrar" aria-label="Cerrar aviso"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </div>
+
+    <div th:if="${enviado}">
+
+        <div class="alerta alerta-info" style="text-align:left;" role="status">
+            <span class="alerta-icono"><i class="ti ti-mail-check" aria-hidden="true"></i></span>
+            <span class="alerta-texto">
+                Si existe una cuenta con ese dato y tiene un correo guardado, te enviamos un enlace para crear
+                una contraseña nueva. Vence en 30 minutos. Revisa también la carpeta de spam.
+            </span>
+        </div>
+
+        <p class="nota">
+            ¿Tu cuenta no tiene correo guardado? Pídele a un administrador de tu tienda que restablezca
+            tu contraseña desde «Usuarios».
+        </p>
+
+    </div>
+
+    <form action="/recuperar" method="post" th:unless="${enviado}" autocomplete="off">
+
+        <div class="form-group">
+            <label for="dato">Tu usuario o tu correo</label>
+            <input type="text" id="dato" name="dato" maxlength="150" required
+                   autocomplete="username" autocapitalize="none" spellcheck="false">
+            <span class="ayuda">Te enviaremos un enlace al correo que registraste.</span>
+        </div>
+
+        <button type="submit" class="btn-login">Enviarme el enlace</button>
+
+    </form>
+
+    <p class="pie"><a href="/login">Volver a iniciar sesión</a></p>
+
+    <p class="frase">Bienaventurados los olvidadizos</p>
+
+</div>
+
+<script src="/js/alertas.js"></script>
+
+</body>
+</html>

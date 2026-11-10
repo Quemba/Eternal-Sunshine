@@ -22,6 +22,10 @@
         .btn-principal { display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:13px 22px; border:none; border-radius:10px; background:#df6794; color:#ffffff; font-family:inherit; font-size:15px; font-weight:800; cursor:pointer; }
         .btn-principal:hover { background:#cf4f81; }
         .btn-principal i { font-size:20px; }
+        .tarjeta-correo { margin-top:22px; }
+        .tarjeta-correo h2 { margin:0 0 6px; font-size:20px; color:#4a1020; }
+        .tarjeta-correo .nota { margin:0 0 16px; color:#8a6a73; font-size:14px; line-height:1.5; }
+        .campo input[type=email] { width:100%; padding:12px; border:2px solid #c29be7; border-radius:10px; font-family:inherit; font-size:16px; background:#ffffff; box-sizing:border-box; }
         .btn-sec { display:inline-flex; align-items:center; justify-content:center; padding:13px 22px; border-radius:10px; background:#c29be7; color:#ffffff; font-size:15px; font-weight:800; text-decoration:none; }
     </style>
 </head>
@@ -97,6 +101,43 @@
                         Guardar contraseña
                     </button>
                     <a href="/" class="btn-sec">Volver</a>
+                </div>
+
+            </form>
+
+            <form method="post" action="/cuenta/correo" class="tarjeta-clave tarjeta-correo" autocomplete="off">
+
+                <h2>Correo de recuperación</h2>
+
+                <p class="nota" th:if="${correoActual != null and correoActual != ''}">
+                    Si olvidas tu contraseña, el enlace llegará a <strong th:text="${correoActual}"></strong>.
+                </p>
+                <p class="nota" th:unless="${correoActual != null and correoActual != ''}">
+                    Aún no tienes un correo guardado. Sin él no podrás recuperar tu contraseña por tu cuenta.
+                </p>
+
+                <div class="campo">
+                    <label for="cr-correo">Correo</label>
+                    <input type="email" id="cr-correo" name="correo" required maxlength="150"
+                           autocomplete="email" th:value="${correoActual}">
+                </div>
+
+                <div class="campo">
+                    <label for="cr-actual">Tu contraseña actual</label>
+                    <div class="campo-clave">
+                        <input type="password" id="cr-actual" name="actual" required
+                               maxlength="64" autocomplete="current-password">
+                        <button type="button" class="ver-clave" data-ver-clave="cr-actual" aria-label="Mostrar contraseña">
+                            <i class="ti ti-eye" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="botones">
+                    <button type="submit" class="btn-principal">
+                        <i class="ti ti-mail" aria-hidden="true"></i>
+                        Guardar correo
+                    </button>
                 </div>
 
             </form>
