@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Detalle de Venta - Eternal Sunshine</title>
 
     <link rel="stylesheet" href="/css/dashboard.css">
@@ -9,20 +10,67 @@
     <link rel="stylesheet" href="/css/alertas.css">
 
     <style>
-        .comprobante { background:white; padding:30px; border-radius:20px; box-shadow:0 4px 12px rgba(0,0,0,.15); max-width:800px; }
-        .comprobante h2 { margin-top:0; color:#df6794; }
-        .datos { display:flex; gap:30px; flex-wrap:wrap; margin-bottom:20px; color:#4a1020; }
-        .datos small { display:block; color:#777; }
-        .total-final { text-align:right; font-size:30px; font-weight:bold; color:#4a1020; margin-top:16px; }
-        .total-final.anulado { color:#999; text-decoration:line-through; }
-        .botones { display:flex; gap:10px; flex-wrap:wrap; margin-top:24px; }
-        .botones a, .botones button { background:#df6794; color:white; border:none; padding:12px 20px; border-radius:10px; text-decoration:none; font-weight:bold; cursor:pointer; font-size:15px; font-family:inherit; }
-        .botones .sec { background:#c29be7; }
-        .botones i { font-size:19px; margin-right:6px; vertical-align:-3px; }
+        .venta-fila { display:flex; gap:32px; flex-wrap:wrap; align-items:flex-start; }
+        .venta-acciones { flex:1 1 300px; max-width:460px; min-width:0; }
 
+        /* ---------- Tiquete ---------- */
+        .ticket-zona { flex:0 0 auto; width:100%; max-width:380px; padding:6px 0 14px; }
+
+        .ticket { position:relative; background:#ffffff; color:#4a1020;
+            filter:drop-shadow(0 6px 14px rgba(74,16,32,.22)); }
+        .ticket::before, .ticket::after { content:""; position:absolute; left:0; right:0; height:10px;
+            background-size:14px 14px; background-repeat:repeat-x; }
+        .ticket::before { top:-10px;
+            background-image:linear-gradient(135deg, transparent 50%, #ffffff 50%), linear-gradient(225deg, transparent 50%, #ffffff 50%);
+            background-size:14px 14px; background-position:0 100%; }
+        .ticket::after { bottom:-10px;
+            background-image:linear-gradient(45deg, transparent 50%, #ffffff 50%), linear-gradient(315deg, transparent 50%, #ffffff 50%);
+            background-size:14px 14px; background-position:0 0; }
+
+        .ticket-cuerpo { position:relative; padding:26px 24px 22px; overflow:hidden; }
+
+        .ticket-marca { text-align:center; font-size:30px; line-height:1; color:#e9a825; }
+        .ticket-tienda { margin:6px 0 2px; text-align:center; font-size:22px; font-weight:800; color:#df6794; word-break:break-word; }
+        .ticket-sub { margin:0; text-align:center; font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:#8a6a73; }
+
+        .ticket-linea { margin:16px 0; border:0; border-top:2px dashed #e3c9d2; }
+
+        .ticket-datos, .ticket-item-detalle, .ticket-resumen { font-family:"Courier New", ui-monospace, Menlo, Consolas, monospace; }
+        .ticket-dato { display:flex; justify-content:space-between; gap:14px; margin:4px 0; font-size:14px; }
+        .ticket-dato span:first-child { color:#8a6a73; }
+        .ticket-dato strong { text-align:right; word-break:break-word; }
+
+        .ticket-item { margin:0 0 12px; }
+        .ticket-item-nombre { font-weight:700; font-size:15px; word-break:break-word; }
+        .ticket-item-codigo { font-size:11px; color:#8a6a73; }
+        .ticket-item-detalle { display:flex; justify-content:space-between; gap:12px; margin-top:2px; font-size:14px; }
+
+        .ticket-resumen { display:flex; justify-content:space-between; font-size:14px; color:#8a6a73; }
+
+        .ticket-total { display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin-top:12px; }
+        .ticket-total span { font-size:13px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+        .ticket-total strong { font-size:32px; line-height:1.1; white-space:nowrap; color:#4a1020; font-family:"Courier New", ui-monospace, Menlo, Consolas, monospace; }
+
+        .ticket-estado { margin-top:12px; text-align:center; }
         .etiqueta { padding:4px 12px; border-radius:12px; font-weight:bold; font-size:13px; white-space:nowrap; }
         .etiqueta-ok { background:#e6f5ea; color:#1f6b3a; }
         .etiqueta-anulada { background:#eee; color:#777; }
+
+        .ticket-gracias { margin:20px 0 0; text-align:center; font-weight:800; font-size:16px; }
+        .ticket-frase { margin:4px 0 0; text-align:center; font-size:13px; font-style:italic; color:#8a6a73; }
+        .ticket-pie { margin:16px 0 0; text-align:center; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:#b79aa4; }
+
+        .ticket-anulado .ticket-cuerpo { color:#777; }
+        .ticket-anulado .ticket-total strong { text-decoration:line-through; color:#999; }
+        .ticket-sello { position:absolute; top:42%; left:50%; transform:translate(-50%, -50%) rotate(-18deg);
+            padding:6px 18px; border:4px solid #b83255; border-radius:10px; color:#b83255; font-size:34px;
+            font-weight:900; letter-spacing:.12em; opacity:.55; pointer-events:none; }
+
+        /* ---------- Acciones ---------- */
+        .botones { display:flex; gap:10px; flex-wrap:wrap; }
+        .botones a, .botones button { background:#df6794; color:white; border:none; padding:12px 20px; border-radius:10px; text-decoration:none; font-weight:bold; cursor:pointer; font-size:15px; font-family:inherit; }
+        .botones .sec { background:#c29be7; }
+        .botones i { font-size:19px; margin-right:6px; vertical-align:-3px; }
 
         .aviso-anulada { display:flex; gap:10px; align-items:flex-start; margin-bottom:20px; padding:14px 16px; border-radius:14px; background:#eeeeee; color:#555; font-size:14px; line-height:1.5; }
         .aviso-anulada i { font-size:22px; color:#b83255; flex-shrink:0; }
@@ -30,15 +78,31 @@
         .form-anular { margin-top:26px; padding:16px; border:2px dashed #e5b3c4; border-radius:14px; background:#fdf6f8; }
         .form-anular label { display:block; margin-bottom:8px; font-weight:bold; color:#4a1020; font-size:14px; }
         .fila-anular { display:flex; gap:10px; flex-wrap:wrap; }
-        .fila-anular input { flex:1; min-width:220px; padding:12px; border:2px solid #c29be7; border-radius:10px; font-family:inherit; font-size:15px; box-sizing:border-box; }
+        .fila-anular input { flex:1; min-width:180px; padding:12px; border:2px solid #c29be7; border-radius:10px; font-family:inherit; font-size:15px; box-sizing:border-box; }
         .btn-anular { background:#b83255; color:white; border:none; padding:12px 20px; border-radius:10px; font-weight:bold; font-size:15px; font-family:inherit; cursor:pointer; }
         .btn-anular:hover { background:#a02a49; }
         .btn-anular i { font-size:19px; margin-right:6px; vertical-align:-3px; }
         .pista-anular { display:block; margin-top:8px; color:#8a6a73; font-size:13px; line-height:1.4; }
 
+        @page { size: 80mm auto; margin: 3mm; }
+
         @media print {
-            .sidebar, .no-print { display:none !important; }
-            .comprobante { box-shadow:none; }
+            body { background:#ffffff !important; }
+            .sidebar, .header, .no-print, .alerta, .venta-acciones { display:none !important; }
+            .dashboard { display:block; min-height:0; }
+            .content { padding:0 !important; }
+            .venta-fila { display:block; }
+            .ticket-zona { max-width:none; width:100%; padding:0; }
+            .ticket { filter:none; }
+            .ticket::before, .ticket::after { display:none; }
+            .ticket-cuerpo { padding:4px 2px; }
+            .ticket-sello { opacity:.8; }
+            * { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+        }
+
+        @media (max-width: 520px) {
+            .ticket-cuerpo { padding:22px 18px 18px; }
+            .ticket-total strong { font-size:26px; }
         }
     </style>
 </head>
@@ -71,130 +135,135 @@
             <button type="button" class="alerta-cerrar" aria-label="Cerrar aviso"><i class="ti ti-x" aria-hidden="true"></i></button>
         </div>
 
-        <div class="comprobante">
+        <div class="venta-fila">
 
-            <h2>Comprobante de venta</h2>
+            <div class="ticket-zona">
 
-            <div class="aviso-anulada" th:if="${venta.anulada == true}">
-                <i class="ti ti-ban" aria-hidden="true"></i>
-                <span>
-                    Venta anulada el
-                    <strong th:text="${#temporals.format(venta.fechaAnulacion, 'dd/MM/yyyy HH:mm')}"></strong>
-                    por
-                    <strong th:text="${venta.usuarioAnula != null} ? ${venta.usuarioAnula.username} : '-'"></strong>.
-                    Motivo: <em th:text="${venta.motivoAnulacion}"></em>.
-                    Las unidades volvieron al inventario y esta venta no cuenta en los totales.
-                </span>
+                <div class="ticket" th:classappend="${venta.anulada == true} ? 'ticket-anulado'">
+
+                    <div class="ticket-cuerpo">
+
+                        <div class="ticket-sello" th:if="${venta.anulada == true}">ANULADA</div>
+
+                        <div class="ticket-marca"><i class="ti ti-sun" aria-hidden="true"></i></div>
+
+                        <h2 class="ticket-tienda"
+                            th:text="${sesionUsuario != null and !#strings.isEmpty(sesionUsuario.tienda)} ? ${sesionUsuario.tienda} : 'Eternal Sunshine'">Eternal Sunshine</h2>
+
+                        <p class="ticket-sub">Comprobante de venta</p>
+
+                        <hr class="ticket-linea">
+
+                        <div class="ticket-datos">
+                            <div class="ticket-dato">
+                                <span>Número</span>
+                                <strong th:text="${venta.numero}"></strong>
+                            </div>
+                            <div class="ticket-dato">
+                                <span>Fecha</span>
+                                <strong th:text="${#temporals.format(venta.fecha, 'dd/MM/yyyy HH:mm')}"></strong>
+                            </div>
+                            <div class="ticket-dato">
+                                <span>Vendedor</span>
+                                <strong th:text="${venta.usuario != null} ? ${venta.usuario.username} : '-'"></strong>
+                            </div>
+                        </div>
+
+                        <hr class="ticket-linea">
+
+                        <div class="ticket-item" th:each="d : ${venta.detalles}">
+                            <div class="ticket-item-nombre"
+                                 th:text="${d.producto != null} ? ${d.producto.nombre} : '(producto eliminado)'"></div>
+                            <div class="ticket-item-codigo"
+                                 th:if="${d.producto != null}"
+                                 th:text="'Cód. ' + ${d.producto.codigo}"></div>
+                            <div class="ticket-item-detalle">
+                                <span th:text="${d.cantidad} + ' × $ ' + ${#numbers.formatInteger(d.precioUnitario, 1, 'POINT')}"></span>
+                                <strong th:text="'$ ' + ${#numbers.formatInteger(d.subtotal, 1, 'POINT')}"></strong>
+                            </div>
+                        </div>
+
+                        <hr class="ticket-linea">
+
+                        <div class="ticket-resumen">
+                            <span>Productos</span>
+                            <span th:text="${#lists.size(venta.detalles)}"></span>
+                        </div>
+
+                        <div class="ticket-total">
+                            <span>Total</span>
+                            <strong th:text="'$ ' + ${#numbers.formatInteger(venta.total, 1, 'POINT')}"></strong>
+                        </div>
+
+                        <div class="ticket-estado">
+                            <span th:if="${venta.anulada == true}" class="etiqueta etiqueta-anulada">Anulada</span>
+                            <span th:unless="${venta.anulada == true}" class="etiqueta etiqueta-ok">Vigente</span>
+                        </div>
+
+                        <hr class="ticket-linea">
+
+                        <p class="ticket-gracias">¡Gracias por tu compra!</p>
+                        <p class="ticket-frase">Que no se te olvide volver.</p>
+                        <p class="ticket-pie">Eternal Sunshine</p>
+
+                    </div>
+
+                </div>
+
             </div>
 
-            <div class="datos">
-                <div>
-                    <small>Número</small>
-                    <strong th:text="${venta.numero}"></strong>
-                </div>
-                <div>
-                    <small>Fecha</small>
-                    <strong th:text="${#temporals.format(venta.fecha, 'dd/MM/yyyy HH:mm')}"></strong>
-                </div>
-                <div>
-                    <small>Vendedor</small>
-                    <strong th:text="${venta.usuario != null} ? ${venta.usuario.username} : '-'"></strong>
-                </div>
-                <div>
-                    <small>Productos</small>
-                    <strong th:text="${#lists.size(venta.detalles)}"></strong>
-                </div>
-                <div>
-                    <small>Estado</small>
-                    <span th:if="${venta.anulada == true}" class="etiqueta etiqueta-anulada">Anulada</span>
-                    <span th:unless="${venta.anulada == true}" class="etiqueta etiqueta-ok">Vigente</span>
-                </div>
-            </div>
+            <div class="venta-acciones no-print">
 
-            <table style="width:100%; border-collapse: collapse;">
-
-                <thead>
-
-                <tr style="background:#df6794; color:white;">
-
-                    <th style="padding:10px; text-align:left;">Código</th>
-
-                    <th style="padding:10px; text-align:left;">Producto</th>
-
-                    <th style="padding:10px;">Cantidad</th>
-
-                    <th style="padding:10px; text-align:right;">Precio</th>
-
-                    <th style="padding:10px; text-align:right;">Subtotal</th>
-
-                </tr>
-
-                </thead>
-
-                <tbody>
-
-                <tr th:each="d : ${venta.detalles}">
-
-                    <td style="padding:10px; border-bottom:1px solid #eee;"
-                        th:text="${d.producto != null} ? ${d.producto.codigo} : '-'"></td>
-
-                    <td style="padding:10px; border-bottom:1px solid #eee;"
-                        th:text="${d.producto != null} ? ${d.producto.nombre} : '(producto eliminado)'"></td>
-
-                    <td style="padding:10px; border-bottom:1px solid #eee; text-align:center;"
-                        th:text="${d.cantidad}"></td>
-
-                    <td style="padding:10px; border-bottom:1px solid #eee; text-align:right;"
-                        th:text="'$ ' + ${#numbers.formatInteger(d.precioUnitario, 1, 'POINT')}"></td>
-
-                    <td style="padding:10px; border-bottom:1px solid #eee; text-align:right;"
-                        th:text="'$ ' + ${#numbers.formatInteger(d.subtotal, 1, 'POINT')}"></td>
-
-                </tr>
-
-                </tbody>
-
-            </table>
-
-            <div class="total-final"
-                 th:classappend="${venta.anulada == true} ? 'anulado'"
-                 th:text="'Total: $ ' + ${#numbers.formatInteger(venta.total, 1, 'POINT')}"></div>
-
-            <form th:if="${esAdmin and venta.anulada != true}"
-                  method="post"
-                  th:action="@{/ventas/{id}/anular(id=${venta.id})}"
-                  class="form-anular no-print"
-                  data-titulo="¿Anular esta venta?"
-                  th:data-confirmar="'Se devolverán al inventario las unidades de ' + ${venta.numero} + ' y la venta dejará de contar en los totales. Esta acción no se puede deshacer.'"
-                  data-boton="Anular venta"
-                  data-icono="ti-ban"
-                  data-tipo="peligro">
-
-                <label for="motivo">Motivo de la anulación</label>
-
-                <div class="fila-anular">
-                    <input type="text"
-                           id="motivo"
-                           name="motivo"
-                           minlength="3"
-                           maxlength="150"
-                           required
-                           autocomplete="off"
-                           placeholder="Ej.: error al digitar, el cliente devolvió todo...">
-
-                    <button type="submit" class="btn-anular">
-                        <i class="ti ti-ban" aria-hidden="true"></i>Anular venta
-                    </button>
+                <div class="aviso-anulada" th:if="${venta.anulada == true}">
+                    <i class="ti ti-ban" aria-hidden="true"></i>
+                    <span>
+                        Venta anulada el
+                        <strong th:text="${#temporals.format(venta.fechaAnulacion, 'dd/MM/yyyy HH:mm')}"></strong>
+                        por
+                        <strong th:text="${venta.usuarioAnula != null} ? ${venta.usuarioAnula.username} : '-'"></strong>.
+                        Motivo: <em th:text="${venta.motivoAnulacion}"></em>.
+                        Las unidades volvieron al inventario y esta venta no cuenta en los totales.
+                    </span>
                 </div>
 
-                <small class="pista-anular">Solo el administrador puede anular. Las unidades vuelven al inventario y la venta conserva su número.</small>
+                <div class="botones">
+                    <button type="button" class="sec" id="btn-volver"><i class="ti ti-arrow-left" aria-hidden="true"></i>Volver</button>
+                    <a href="/ventas/nueva"><i class="ti ti-shopping-cart-plus" aria-hidden="true"></i>Nueva venta</a>
+                    <a href="/ventas" class="sec"><i class="ti ti-receipt" aria-hidden="true"></i>Ver todas las ventas</a>
+                    <button type="button" class="sec" onclick="window.print()"><i class="ti ti-printer" aria-hidden="true"></i>Imprimir</button>
+                </div>
 
-            </form>
+                <form th:if="${esAdmin and venta.anulada != true}"
+                      method="post"
+                      th:action="@{/ventas/{id}/anular(id=${venta.id})}"
+                      class="form-anular no-print"
+                      data-titulo="¿Anular esta venta?"
+                      th:data-confirmar="'Se devolverán al inventario las unidades de ' + ${venta.numero} + ' y la venta dejará de contar en los totales. Esta acción no se puede deshacer.'"
+                      data-boton="Anular venta"
+                      data-icono="ti-ban"
+                      data-tipo="peligro">
 
-            <div class="botones no-print">
-                <a href="/ventas/nueva"><i class="ti ti-shopping-cart-plus" aria-hidden="true"></i>Nueva venta</a>
-                <a href="/ventas" class="sec"><i class="ti ti-receipt" aria-hidden="true"></i>Ver todas las ventas</a>
-                <button type="button" class="sec" onclick="window.print()"><i class="ti ti-printer" aria-hidden="true"></i>Imprimir</button>
+                    <label for="motivo">Motivo de la anulación</label>
+
+                    <div class="fila-anular">
+                        <input type="text"
+                               id="motivo"
+                               name="motivo"
+                               minlength="3"
+                               maxlength="150"
+                               required
+                               autocomplete="off"
+                               placeholder="Ej.: error al digitar, el cliente devolvió todo...">
+
+                        <button type="submit" class="btn-anular">
+                            <i class="ti ti-ban" aria-hidden="true"></i>Anular venta
+                        </button>
+                    </div>
+
+                    <small class="pista-anular">Solo el administrador puede anular. Las unidades vuelven al inventario y la venta conserva su número.</small>
+
+                </form>
+
             </div>
 
         </div>
@@ -202,6 +271,38 @@
     </div>
 
 </div>
+
+<script>
+    (function () {
+        var boton = document.getElementById('btn-volver');
+
+        if (!boton) return;
+
+        boton.addEventListener('click', function () {
+            var ruta = '';
+
+            try {
+                if (document.referrer) {
+                    var anterior = new URL(document.referrer);
+
+                    if (anterior.host === window.location.host) {
+                        ruta = anterior.pathname;
+                    }
+                }
+            } catch (e) {
+                ruta = '';
+            }
+
+            // Si no hay pantalla anterior de la app, o venimos de crear la venta, vamos a la lista
+            if (ruta === '' || ruta === '/ventas/nueva' || window.history.length < 2) {
+                window.location.href = '/ventas';
+                return;
+            }
+
+            window.history.back();
+        });
+    })();
+</script>
 
 <script src="/js/confirmar.js"></script>
 <script src="/js/alertas.js"></script>
