@@ -515,6 +515,8 @@
             await esperar(Math.max(0, (exito ? MINIMO_EXITO_MS : MINIMO_MS) - transcurrido));
 
             if (exito) {
+                // Deja la marca para el recorrido guiado de la tienda nueva
+                try { localStorage.setItem('es-tutorial', JSON.stringify({ paso: 0, u: usuario.value.trim().toLowerCase() })); } catch (e) {}
                 // La tienda ya está creada: se queda esperando a que toque el botón
                 pantalla.classList.add('lista');
                 botonEntrar.focus();
