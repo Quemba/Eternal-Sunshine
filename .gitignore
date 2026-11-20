@@ -31,3 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Secretos y respaldos (nunca subir) ###
+.env
+.env.*
+*.dump
+*.sql.gz
+application-local.properties
